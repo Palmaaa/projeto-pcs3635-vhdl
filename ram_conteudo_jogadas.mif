@@ -1,0 +1,19 @@
+% conteudo da memoria ram_10x2 %
+WIDTH=2;
+DEPTH=11;
+ADDRESS_RADIX=UNS;
+DATA_RADIX=BIN;
+CONTENT 
+BEGIN
+0  : 00;
+1  : 01;
+2  : 10;
+3  : 11;
+4  : 00;
+5  : 01;
+6  : 10;
+7  : 11;
+8  : 00;
+9  : 01;
+10 : 10;
+END;
