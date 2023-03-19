@@ -8,6 +8,7 @@ entity fluxo_dados is
     clock : in std_logic;
     zeraCR : in std_logic;
     contaCR : in std_logic;
+    reduzCR: in std_logic;
     limpaRC : in std_logic;
     registraRC : in std_logic;
     limpaPR : in std_logic;
@@ -16,15 +17,16 @@ entity fluxo_dados is
     zeraT : in std_logic;
     zeraJ0 : in std_logic;
     contaJ0 : in std_logic;
-    seleciona_premio : in std_logic;
     botoes : in std_logic_vector (3 downto 0);
     jogada_pulso : out std_logic;
     jogada_correta : out std_logic;
+    jogada : out std_logic_vector (1 downto 0);
+    inicioL : out std_logic;
     fimL : out std_logic;
+    meioT: out std_logic;
     fimT : out std_logic;
     fimJ0 : out std_logic;
     leds : out std_logic_vector (1 downto 0);
-    db_jogada_feita : out std_logic_vector (1 downto 0);
     db_memoria : out std_logic_vector (1 downto 0);
     db_conta_premio : out std_logic_vector(3 downto 0);
     db_rodada : out std_logic_vector (3 downto 0)
@@ -40,7 +42,6 @@ architecture estrutural of fluxo_dados is
   signal s_codificado : std_logic_vector (1 downto 0);
   signal s_resposta      : std_logic_vector (1 downto 0);
   signal s_premio_ganho : std_logic_vector (3 downto 0);
-  signal s_conta_premio : std_logic_vector (3 downto 0);
 
   signal reset_edge    : std_logic;
   signal s_sinal       : std_logic;
@@ -74,19 +75,6 @@ architecture estrutural of fluxo_dados is
         enable : in  std_logic;
         D      : in  std_logic_vector (N-1 downto 0);
         Q      : out std_logic_vector (N-1 downto 0) 
-    );
-  end component;
-
-  component contador_163
-    port (
-        clock : in  std_logic;
-        clr   : in  std_logic;
-        ld    : in  std_logic;
-        ent   : in  std_logic;
-        enp   : in  std_logic;
-        D     : in  std_logic_vector (3 downto 0);
-        Q     : out std_logic_vector (3 downto 0);
-        rco   : out std_logic 
     );
   end component;
 
@@ -125,18 +113,13 @@ architecture estrutural of fluxo_dados is
         zera_as : in  std_logic;
         zera_s  : in  std_logic;
         conta   : in  std_logic;
+        reduz   : in  std_logic;
         Q       : out std_logic_vector(natural(ceil(log2(real(M))))-1 downto 0);
         fim     : out std_logic;
+        inicio  : out std_logic;
         meio    : out std_logic
     );
   end component;
-  
-  -- component decodificador_premio is
-  --   port (
-  --       rodada : in std_logic_vector(3 downto 0);
-  --       premio : out std_logic_vector(10 downto 0)
-  --   );
-  -- end component;
 
 begin
 
@@ -146,6 +129,7 @@ begin
 
   leds <= s_dado;
 
+  -- Registra o valor do premio (expoente)
   registrador_premio: registrador_n
   generic map ( N => 4 )
     port map (
@@ -155,26 +139,15 @@ begin
         D      => s_rodada, 
         Q      => s_premio_ganho
     );
-                
 
+   db_conta_premio <= s_premio_ganho;
+                
+  -- Codifica respostas para 2 bits
   encoder: codificador_4x2
     port map(
       botoes => botoes,
       valor => s_codificado
     );
-
-  db_conta_premio <= s_conta_premio;
-
-  with seleciona_premio select
-      s_conta_premio <= s_premio_ganho when '0',
-              s_premio_ganho when '1',
-              "1111" when others;
-
-  -- calcula_premio: decodificador_premio
-  --   port map (
-  --     rodada => s_conta_premio,
-  --     premio => premio
-  --   );
 
   edge: edge_detector
     port map(
@@ -203,8 +176,10 @@ begin
         zera_as => '0',
         zera_s   => zeraCR,  -- clr ativo em alto
         conta => contaCR,
+        reduz => reduzCR,
         Q    => s_rodada,
         meio => open,
+        inicio => inicioL,
         fim  => fimL
     );
 
@@ -231,8 +206,10 @@ begin
         zera_as => '0',
         zera_s => zeraT,
         conta => contaT,
+        reduz => '0',
         Q => open,
-        meio => open,
+        meio => meioT,
+        inicio => open,
         fim => fimT
       );
 
@@ -244,15 +221,17 @@ begin
         zera_as => '0',
         zera_s => zeraJ0,
         conta => contaJ0,
+        reduz => '0',
         Q => open,
         meio => open,
+        inicio => open,
         fim => fimJ0
       );
 
       
    s_endereco <= s_rodada;
-   memoria: entity work.ram_10x2 (ram_mif)  -- usar esta linha para Intel Quartus
-   ---- memoria: entity work.ram_10x2 (ram_modelsim) -- usar arquitetura para ModelSim
+   ---- memoria: entity work.ram_10x2 (ram_mif)  -- usar esta linha para Intel Quartus
+   memoria: entity work.ram_10x2 (ram_modelsim) -- usar arquitetura para ModelSim
    port map (
       clk          => clock,
       endereco     => s_endereco,
@@ -264,6 +243,6 @@ begin
 
  db_rodada   <= s_rodada;
  db_memoria  <= s_dado;
- db_jogada_feita <= s_resposta;
+ jogada <= s_resposta;
 
 end architecture estrutural;

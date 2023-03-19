@@ -28,13 +28,17 @@ architecture arch of circuito_jogo is
    -- FD to UC
    signal s_jogada_pulso : std_logic;
    signal s_jogada_correta : std_logic;
+   signal s_inicioL : std_logic;
    signal s_fimL : std_logic;
+   signal s_meioT : std_logic;
    signal s_fimT : std_logic;
    signal s_fimJ0 : std_logic;
+   signal s_jogada : std_logic_vector(1 downto 0);
  
    -- UC to FD
    signal s_zeraCR     : std_logic;
    signal s_contaCR    : std_logic;
+   signal s_reduzCR : std_logic;
    signal s_limpaRC     : std_logic;
    signal s_registraRC : std_logic;
    signal s_zeraT     : std_logic;
@@ -43,7 +47,6 @@ architecture arch of circuito_jogo is
    signal s_contaJ0    : std_logic;
    signal s_limpaPR : std_logic;
    signal s_registraPR : std_logic;
-   signal s_seleciona_premio : std_logic;
    
    -- Sinais de depuracao aos displays
    signal s_contagem : std_logic_vector (3 downto 0);
@@ -61,6 +64,7 @@ architecture arch of circuito_jogo is
       clock : in std_logic;
       zeraCR : in std_logic;
       contaCR : in std_logic;
+      reduzCR: in std_logic;
       limpaRC : in std_logic;
       registraRC : in std_logic;
       limpaPR : in std_logic;
@@ -69,15 +73,16 @@ architecture arch of circuito_jogo is
       zeraT : in std_logic;
       zeraJ0 : in std_logic;
       contaJ0 : in std_logic;
-      seleciona_premio : in std_logic;
       botoes : in std_logic_vector (3 downto 0);
       jogada_pulso : out std_logic;
       jogada_correta : out std_logic;
+      jogada : out std_logic_vector (1 downto 0);
+      inicioL : out std_logic;
       fimL : out std_logic;
+      meioT: out std_logic;
       fimT : out std_logic;
       fimJ0 : out std_logic;
       leds : out std_logic_vector (1 downto 0);
-      db_jogada_feita : out std_logic_vector (1 downto 0);
       db_memoria : out std_logic_vector (1 downto 0);
       db_conta_premio : out std_logic_vector(3 downto 0);
       db_rodada : out std_logic_vector (3 downto 0)
@@ -91,11 +96,15 @@ architecture arch of circuito_jogo is
       iniciar : in std_logic;
       jogada_pulso : in std_logic;
       jogada_correta : in std_logic;
+      jogada : in std_logic_vector(1 downto 0);
+      inicioL : in std_logic;
       fimL : in std_logic;
+      meioT : in std_logic;
       fimT : in std_logic;
       fimJ0 : in std_logic;
       zeraCR : out std_logic;
       contaCR : out std_logic;
+      reduzCR : out std_logic;
       limpaRC : out std_logic;
       registraRC : out std_logic;
       limpaPR : out std_logic;
@@ -104,7 +113,6 @@ architecture arch of circuito_jogo is
       contaT : out std_logic;
       zeraJ0 : out std_logic;
       contaJ0 : out std_logic;
-      seleciona_premio : out std_logic;
       ganhou : out std_logic;
       perdeu : out std_logic;
       pronto : out std_logic;
@@ -119,6 +127,13 @@ architecture arch of circuito_jogo is
     );
   end component;
 
+  component letter7seg is
+    port (
+        letter : in  std_logic_vector(1 downto 0);
+        sseg : out std_logic_vector(6 downto 0)
+    );
+  end component;
+
   begin
 
     UC: unidade_controle
@@ -128,11 +143,15 @@ architecture arch of circuito_jogo is
         iniciar   => iniciar,
         jogada_pulso    => s_jogada_pulso,
         jogada_correta     => s_jogada_correta,
+        jogada => s_jogada,
+        inicioL => s_inicioL,
         fimL => s_fimL,
+        meioT => s_meioT,
         fimT => s_fimT,
         fimJ0 => s_fimJ0,
         zeraCR     => s_zeraCR,
         contaCR     => s_contaCR,
+        reduzCR => s_reduzCR,
         limpaRC => s_limpaRC,
         registraRC => s_registraRC,
         limpaPR => s_limpaPR,
@@ -141,7 +160,6 @@ architecture arch of circuito_jogo is
         contaT    => s_contaT,
         zeraJ0 => s_zeraJ0,
         contaJ0 => s_contaJ0,
-        seleciona_premio => s_seleciona_premio,
         ganhou => ganhou,
         perdeu => perdeu,
         pronto => pronto,
@@ -153,6 +171,7 @@ architecture arch of circuito_jogo is
         clock               => clock,
         zeraCR     => s_zeraCR,
         contaCR     => s_contaCR,
+        reduzCR => s_reduzCR,
         limpaRC => s_limpaRC,
         registraRC => s_registraRC,
         limpaPR => s_limpaPR,
@@ -161,18 +180,19 @@ architecture arch of circuito_jogo is
         contaT    => s_contaT,
         zeraJ0 => s_zeraJ0,
         contaJ0 => s_contaJ0,
-        seleciona_premio => s_seleciona_premio,
         botoes => botoes,
         jogada_pulso    => s_jogada_pulso,
         jogada_correta     => s_jogada_correta,
+        jogada => s_jogada,
         fimL => s_fimL,
+        inicioL => s_inicioL,
+        meioT => s_meioT,
         fimT => s_fimT,
         fimJ0 => s_fimJ0,
         leds => leds,
         db_rodada       => s_rodada,
         db_memoria          => s_memoria,
-        db_conta_premio => s_conta_premio,
-        db_jogada_feita           => s_jogada_feita
+        db_conta_premio => s_conta_premio
       );
 
     HEX0: hexa7seg
@@ -181,17 +201,15 @@ architecture arch of circuito_jogo is
         db_rodada
       );
 
-    s_memoria_ext <= (1=>s_memoria(1), 0=> s_memoria(0), others=>'0');
-
-    HEX1: hexa7seg
+    HEX1: letter7seg
       port map (
-        s_memoria_ext,
+        s_memoria,
         db_memoria
       );
 
-    HEX2: hexa7seg
+    HEX2: letter7seg
       port map (
-        s_jogada_feita_ext,
+        s_jogada,
         db_jogada_feita
       );
 

@@ -68,7 +68,6 @@ architecture tb of circuito_jogo_acerto_tb is
   signal jogada_feita_out     : std_logic_vector(6 downto 0) := "0000000";
   signal rodada_out : std_logic_vector(6 downto 0) := "0000000";
   signal estado_out     : std_logic_vector(6 downto 0) := "0000000";
-  signal premio_out : std_logic_vector(10 downto 0) := "00000000000";
 
   -- Configurações do clock
   signal keep_simulating: std_logic := '0'; -- delimita o tempo de geração do clock
@@ -129,9 +128,9 @@ begin
 
 
     botoes_in <= "0001";
-    wait for 2*clockPeriod;
+    wait for 5*clockPeriod;
     botoes_in <= "0000";
-    wait for 2*clockPeriod;
+    wait for 5*clockPeriod;
 
     ---- Jogada da rodada 0
     botoes_in <= "0001";
