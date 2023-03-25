@@ -14,7 +14,7 @@ begin
   sseg <= "0001000" when letter="00" else
           "0000011" when letter="01" else
           "1000110" when letter="10" else
-          "0000110" when letter="11" else
+          "0100001" when letter="11" else
           "1111111";
 
 end architecture comportamental;
