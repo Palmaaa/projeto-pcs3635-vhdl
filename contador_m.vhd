@@ -25,63 +25,70 @@
 --     29/01/2023  2.1     Edson Midorikawa  revisao do componente
 -------------------------------------------------------------------------
 --
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use ieee.math_real.all;
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+USE ieee.numeric_std.ALL;
+USE ieee.math_real.ALL;
 
-entity contador_m is
-    generic (
-        constant M: integer := 100 -- modulo do contador
+ENTITY contador_m IS
+    GENERIC (
+        CONSTANT M : INTEGER := 100 -- modulo do contador
     );
-    port (
-        clock   : in  std_logic;
-        zera_as : in  std_logic;
-        zera_s  : in  std_logic;
-        conta   : in  std_logic;
-        reduz   : in  std_logic;
-        Q       : out std_logic_vector(natural(ceil(log2(real(M))))-1 downto 0);
-        fim     : out std_logic;
-        inicio  : out std_logic;
-        meio    : out std_logic
+    PORT (
+        clock   : IN STD_LOGIC;
+        zera_as : IN STD_LOGIC;
+        zera_s  : IN STD_LOGIC;
+        conta   : IN STD_LOGIC;
+        reduz   : IN STD_LOGIC;
+        Q       : OUT STD_LOGIC_VECTOR(NATURAL(ceil(log2(real(M)))) - 1 DOWNTO 0);
+        fim     : OUT STD_LOGIC;
+        inicio  : OUT STD_LOGIC;
+        meio    : OUT STD_LOGIC
     );
-end entity contador_m;
+END ENTITY contador_m;
 
-architecture comportamental of contador_m is
-    signal IQ: integer range 0 to M-1;
-begin
-  
-    process (clock,zera_as,zera_s,conta,IQ)
-    begin
-        if zera_as='1' then    IQ <= 0;   
-        elsif rising_edge(clock) then
-            if zera_s='1' then IQ <= 0;
-            elsif conta='1' and reduz='0' then 
-                if IQ=M-1 then IQ <= 0; 
-                else           IQ <= IQ + 1; 
-                end if;
-            elsif reduz='1' and conta='0' then 
-                if IQ>2 then IQ <= IQ - 2;
-                else          IQ <= 0;
-                end if;
-            else IQ <= IQ;
-            end if;
-        end if;
-    end process;
+ARCHITECTURE comportamental OF contador_m IS
+    SIGNAL IQ : INTEGER RANGE 0 TO M - 1;
+BEGIN
+
+    PROCESS (clock, zera_as, zera_s, conta, IQ)
+    BEGIN
+        IF zera_as = '1' THEN
+            IQ <= 0;
+        ELSIF rising_edge(clock) THEN
+            IF zera_s = '1' THEN
+                IQ <= 0;
+            ELSIF conta = '1' AND reduz = '0' THEN
+                IF IQ = M - 1 THEN
+                    IQ <= 0;
+                ELSE
+                    IQ <= IQ + 1;
+                END IF;
+            ELSIF reduz = '1' AND conta = '0' THEN
+                IF IQ > 2 THEN
+                    IQ <= IQ - 2;
+                ELSE
+                    IQ <= 0;
+                END IF;
+            ELSE
+                IQ <= IQ;
+            END IF;
+        END IF;
+    END PROCESS;
 
     -- saida fim
-    fim <= '1' when IQ=M-1 else
-           '0';
+    fim <= '1' WHEN IQ = M - 1 ELSE
+        '0';
 
     -- saida inicio
-    inicio <= '1' when IQ=0 else
-              '0';
+    inicio <= '1' WHEN IQ = 0 ELSE
+        '0';
 
     -- saida meio
-    meio <= '1' when IQ=M/2-1 else
-            '0';
+    meio <= '1' WHEN IQ = M/2 - 1 ELSE
+        '0';
 
     -- saida Q
-    Q <= std_logic_vector(to_unsigned(IQ, Q'length));
+    Q <= STD_LOGIC_VECTOR(to_unsigned(IQ, Q'length));
 
-end architecture comportamental;
+END ARCHITECTURE comportamental;

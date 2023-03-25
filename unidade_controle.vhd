@@ -1,226 +1,204 @@
---------------------------------------------------------------------
--- Arquivo   : unidade_controle.vhd
--- Projeto   : Experiencia 3 - Projeto de uma unidade de controle
---------------------------------------------------------------------
--- Descricao : unidade de controle 
---
---             1) codificação VHDL (maquina de Moore)
---
---             2) definicao de valores da saida de depuracao
---                db_estado
--- 
---------------------------------------------------------------------
--- Revisoes  :
---     Data        Versao  Autor             Descricao
---     20/01/2022  1.0     Edson Midorikawa  versao inicial
---     22/01/2023  1.1     Edson Midorikawa  revisao
---------------------------------------------------------------------
---
-library ieee;
-use ieee.std_logic_1164.all;
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
 
-entity unidade_controle is
-    port (
-        clock : in std_logic;
-        reset : in std_logic;
-        jogada_pulso : in std_logic;
-        jogada_correta : in std_logic;
-        jogada : in std_logic_vector(1 downto 0);
-        inicioL : in std_logic;
-        fimL : in std_logic;
-        meioT : in std_logic;
-        fimT : in std_logic;
-        fimJ0 : in std_logic;
-        zeraCR : out std_logic;
-        contaCR : out std_logic;
-        reduzCR : out std_logic;
-        limpaRC : out std_logic;
-        registraRC : out std_logic;
-        limpaPR : out std_logic;
-        registraPR: out std_logic;
-        zeraT : out std_logic;
-        contaT : out std_logic;
-        zeraJ0 : out std_logic;
-        contaJ0 : out std_logic;
-        ganhou : out std_logic;
-        perdeu : out std_logic;
-        pronto : out std_logic;
-        db_estado : out std_logic_vector(3 downto 0)
+ENTITY unidade_controle IS
+    PORT (
+        clock          : IN STD_LOGIC;
+        reset          : IN STD_LOGIC;
+        jogada_pulso   : IN STD_LOGIC;
+        jogada_correta : IN STD_LOGIC;
+        jogada         : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+        inicioL        : IN STD_LOGIC;
+        fimL           : IN STD_LOGIC;
+        meioT          : IN STD_LOGIC;
+        fimT           : IN STD_LOGIC;
+        fimJ0          : IN STD_LOGIC;
+        zeraCR         : OUT STD_LOGIC;
+        contaCR        : OUT STD_LOGIC;
+        reduzCR        : OUT STD_LOGIC;
+        limpaRC        : OUT STD_LOGIC;
+        registraRC     : OUT STD_LOGIC;
+        limpaPR        : OUT STD_LOGIC;
+        registraPR     : OUT STD_LOGIC;
+        zeraT          : OUT STD_LOGIC;
+        contaT         : OUT STD_LOGIC;
+        zeraJ0         : OUT STD_LOGIC;
+        contaJ0        : OUT STD_LOGIC;
+        ganhou         : OUT STD_LOGIC;
+        perdeu         : OUT STD_LOGIC;
+        pronto         : OUT STD_LOGIC;
+        db_estado      : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
     );
-end entity;
-   
-
-architecture fsm of unidade_controle is
-    type t_estado is (
-        menu_inicial, 
+END ENTITY;
+ARCHITECTURE fsm OF unidade_controle IS
+    TYPE t_estado IS (
+        menu_inicial,
         registra_modo,
         seleciona_modo,
         mostra_pergunta0, mostra_pergunta1, mostra_pergunta2, mostra_pergunta3,
-        espera_resposta0, espera_resposta1, espera_resposta2, espera_resposta3, 
-        registra_resposta0, registra_resposta1, registra_resposta2, registra_resposta3, 
-        compara_resposta0, compara_resposta1, compara_resposta2, compara_resposta3, 
-        proxima_pergunta0, proxima_pergunta1, proxima_pergunta2, proxima_pergunta3, 
+        espera_resposta0, espera_resposta1, espera_resposta2, espera_resposta3,
+        registra_resposta0, registra_resposta1, registra_resposta2, registra_resposta3,
+        compara_resposta0, compara_resposta1, compara_resposta2, compara_resposta3,
+        proxima_pergunta0, proxima_pergunta1, proxima_pergunta2, proxima_pergunta3,
         reduz_rodada1,
         compara_rodada1,
         nova_pergunta1,
         fim_acerto,
         fim_erro,
         fim_timeout
-        );
-    signal Eatual, Eprox: t_estado;
-begin
+    );
+    SIGNAL Eatual, Eprox : t_estado;
+BEGIN
 
     -- memoria de estado
-    process (clock,reset)
-    begin
-        if reset='1' then
+    PROCESS (clock, reset)
+    BEGIN
+        IF reset = '1' THEN
             Eatual <= menu_inicial;
-        elsif clock'event and clock = '1' then
-            Eatual <= Eprox; 
-        end if;
-    end process;
+        ELSIF clock'event AND clock = '1' THEN
+            Eatual <= Eprox;
+        END IF;
+    END PROCESS;
 
     -- logica de proximo estado
     Eprox <=
-        menu_inicial            when Eatual=menu_inicial       and jogada_pulso='0'                 else
-        registra_modo           when Eatual=menu_inicial       and jogada_pulso='1'                 else
-        seleciona_modo          when Eatual=registra_modo                                           else 
+        menu_inicial WHEN Eatual = menu_inicial AND jogada_pulso = '0' ELSE
+        registra_modo WHEN Eatual = menu_inicial AND jogada_pulso = '1' ELSE
+        seleciona_modo WHEN Eatual = registra_modo ELSE
 
         -- Modo de jogo 0 (aprender), tentar quantas vezes quiser a resposta
-        mostra_pergunta0        when Eatual=seleciona_modo     and jogada="00"                      else
-        espera_resposta0        when Eatual=mostra_pergunta0                                        else
-        espera_resposta0        when Eatual=espera_resposta0   and jogada_pulso='0'   and fimT='0'  else
-        registra_resposta0      when Eatual=espera_resposta0   and jogada_pulso='1'   and fimT='0'  else
-        fim_timeout             when Eatual=espera_resposta0   and jogada_pulso='0'   and fimT='1'  else
-        fim_timeout             when Eatual=espera_resposta0   and jogada_pulso='1'   and fimT='1'  else
-        compara_resposta0       when Eatual=registra_resposta0                                      else
-        proxima_pergunta0       when Eatual=compara_resposta0  and jogada_correta='1' and fimL='0'  else
-        fim_acerto              when Eatual=compara_resposta0  and jogada_correta='1' and fimL='1'  else
-        mostra_pergunta0        when Eatual=compara_resposta0  and jogada_correta='0'               else
-        mostra_pergunta0        when Eatual=proxima_pergunta0                                       else
+        mostra_pergunta0 WHEN Eatual = seleciona_modo AND jogada = "00" ELSE
+        espera_resposta0 WHEN Eatual = mostra_pergunta0 ELSE
+        espera_resposta0 WHEN Eatual = espera_resposta0 AND jogada_pulso = '0' AND fimT = '0' ELSE
+        registra_resposta0 WHEN Eatual = espera_resposta0 AND jogada_pulso = '1' AND fimT = '0' ELSE
+        fim_timeout WHEN Eatual = espera_resposta0 AND jogada_pulso = '0' AND fimT = '1' ELSE
+        fim_timeout WHEN Eatual = espera_resposta0 AND jogada_pulso = '1' AND fimT = '1' ELSE
+        compara_resposta0 WHEN Eatual = registra_resposta0 ELSE
+        proxima_pergunta0 WHEN Eatual = compara_resposta0 AND jogada_correta = '1' AND fimL = '0' ELSE
+        fim_acerto WHEN Eatual = compara_resposta0 AND jogada_correta = '1' AND fimL = '1' ELSE
+        mostra_pergunta0 WHEN Eatual = compara_resposta0 AND jogada_correta = '0' ELSE
+        mostra_pergunta0 WHEN Eatual = proxima_pergunta0 ELSE
 
         -- Modo de jogo 1 (facil), volta uma rodada ao errar
-        mostra_pergunta1        when Eatual=seleciona_modo     and jogada="01"                      else
-        espera_resposta1        when Eatual=mostra_pergunta1                                        else
-        espera_resposta1        when Eatual=espera_resposta1   and jogada_pulso='0'   and fimT='0'  else
-        registra_resposta1      when Eatual=espera_resposta1   and jogada_pulso='1'   and fimT='0'  else
-        fim_timeout             when Eatual=espera_resposta1   and jogada_pulso='0'   and fimT='1'  else
-        fim_timeout             when Eatual=espera_resposta1   and jogada_pulso='1'   and fimT='1'  else
-        compara_resposta1       when Eatual=registra_resposta1                                      else
-        proxima_pergunta1       when Eatual=compara_resposta1  and jogada_correta='1' and fimL='0'  else
-        fim_acerto              when Eatual=compara_resposta1  and jogada_correta='1' and fimL='1'  else
-        reduz_rodada1           when Eatual=compara_resposta1  and jogada_correta='0'               else
-        compara_rodada1         when Eatual=reduz_rodada1                                           else
-        fim_erro                when Eatual=compara_rodada1    and inicioL='1'                      else
-        nova_pergunta1          when Eatual=compara_rodada1    and inicioL='0'                      else
-        mostra_pergunta1        when Eatual=nova_pergunta1                                          else
-        mostra_pergunta1        when Eatual=proxima_pergunta1                                       else
+        mostra_pergunta1 WHEN Eatual = seleciona_modo AND jogada = "01" ELSE
+        espera_resposta1 WHEN Eatual = mostra_pergunta1 ELSE
+        espera_resposta1 WHEN Eatual = espera_resposta1 AND jogada_pulso = '0' AND fimT = '0' ELSE
+        registra_resposta1 WHEN Eatual = espera_resposta1 AND jogada_pulso = '1' AND fimT = '0' ELSE
+        fim_timeout WHEN Eatual = espera_resposta1 AND jogada_pulso = '0' AND fimT = '1' ELSE
+        fim_timeout WHEN Eatual = espera_resposta1 AND jogada_pulso = '1' AND fimT = '1' ELSE
+        compara_resposta1 WHEN Eatual = registra_resposta1 ELSE
+        proxima_pergunta1 WHEN Eatual = compara_resposta1 AND jogada_correta = '1' AND fimL = '0' ELSE
+        fim_acerto WHEN Eatual = compara_resposta1 AND jogada_correta = '1' AND fimL = '1' ELSE
+        reduz_rodada1 WHEN Eatual = compara_resposta1 AND jogada_correta = '0' ELSE
+        compara_rodada1 WHEN Eatual = reduz_rodada1 ELSE
+        fim_erro WHEN Eatual = compara_rodada1 AND inicioL = '1' ELSE
+        nova_pergunta1 WHEN Eatual = compara_rodada1 AND inicioL = '0' ELSE
+        mostra_pergunta1 WHEN Eatual = nova_pergunta1 ELSE
+        mostra_pergunta1 WHEN Eatual = proxima_pergunta1 ELSE
 
         -- Modo de jogo 2 (normal), perda ao errar
-        mostra_pergunta2        when Eatual=seleciona_modo     and jogada="10"                      else
-        espera_resposta2        when Eatual=mostra_pergunta2                                        else
-        espera_resposta2        when Eatual=espera_resposta2   and jogada_pulso='0'   and fimT='0'  else
-        registra_resposta2      when Eatual=espera_resposta2   and jogada_pulso='1'   and fimT='0'  else
-        fim_timeout             when Eatual=espera_resposta2   and jogada_pulso='0'   and fimT='1'  else
-        fim_timeout             when Eatual=espera_resposta2   and jogada_pulso='1'   and fimT='1'  else
-        compara_resposta2       when Eatual=registra_resposta2                                      else
-        proxima_pergunta2       when Eatual=compara_resposta2  and jogada_correta='1' and fimL='0'  else
-        fim_acerto              when Eatual=compara_resposta2  and jogada_correta='1' and fimL='1'  else
-        fim_erro                when Eatual=compara_resposta2  and jogada_correta='0'               else
-        mostra_pergunta2        when Eatual=proxima_pergunta2                                       else
+        mostra_pergunta2 WHEN Eatual = seleciona_modo AND jogada = "10" ELSE
+        espera_resposta2 WHEN Eatual = mostra_pergunta2 ELSE
+        espera_resposta2 WHEN Eatual = espera_resposta2 AND jogada_pulso = '0' AND fimT = '0' ELSE
+        registra_resposta2 WHEN Eatual = espera_resposta2 AND jogada_pulso = '1' AND fimT = '0' ELSE
+        fim_timeout WHEN Eatual = espera_resposta2 AND jogada_pulso = '0' AND fimT = '1' ELSE
+        fim_timeout WHEN Eatual = espera_resposta2 AND jogada_pulso = '1' AND fimT = '1' ELSE
+        compara_resposta2 WHEN Eatual = registra_resposta2 ELSE
+        proxima_pergunta2 WHEN Eatual = compara_resposta2 AND jogada_correta = '1' AND fimL = '0' ELSE
+        fim_acerto WHEN Eatual = compara_resposta2 AND jogada_correta = '1' AND fimL = '1' ELSE
+        fim_erro WHEN Eatual = compara_resposta2 AND jogada_correta = '0' ELSE
+        mostra_pergunta2 WHEN Eatual = proxima_pergunta2 ELSE
 
         -- Modo de jogo 3 (dificil), maior velocidade 
-        mostra_pergunta3        when Eatual=seleciona_modo     and jogada="11"                      else
-        espera_resposta3        when Eatual=mostra_pergunta3                                        else
-        espera_resposta3        when Eatual=espera_resposta3   and jogada_pulso='0'   and meioT='0' else
-        registra_resposta3      when Eatual=espera_resposta3   and jogada_pulso='1'   and meioT='0' else
-        fim_timeout             when Eatual=espera_resposta3   and jogada_pulso='0'   and meioT='1' else
-        fim_timeout             when Eatual=espera_resposta3   and jogada_pulso='1'   and meioT='1' else
-        compara_resposta3       when Eatual=registra_resposta3                                      else
-        proxima_pergunta3       when Eatual=compara_resposta3  and jogada_correta='1' and fimL='0'  else
-        fim_acerto              when Eatual=compara_resposta3  and jogada_correta='1' and fimL='1'  else
-        fim_erro                when Eatual=compara_resposta3  and jogada_correta='0'               else
-        mostra_pergunta3        when Eatual=proxima_pergunta3                                       else
+        mostra_pergunta3 WHEN Eatual = seleciona_modo AND jogada = "11" ELSE
+        espera_resposta3 WHEN Eatual = mostra_pergunta3 ELSE
+        espera_resposta3 WHEN Eatual = espera_resposta3 AND jogada_pulso = '0' AND meioT = '0' ELSE
+        registra_resposta3 WHEN Eatual = espera_resposta3 AND jogada_pulso = '1' AND meioT = '0' ELSE
+        fim_timeout WHEN Eatual = espera_resposta3 AND jogada_pulso = '0' AND meioT = '1' ELSE
+        fim_timeout WHEN Eatual = espera_resposta3 AND jogada_pulso = '1' AND meioT = '1' ELSE
+        compara_resposta3 WHEN Eatual = registra_resposta3 ELSE
+        proxima_pergunta3 WHEN Eatual = compara_resposta3 AND jogada_correta = '1' AND fimL = '0' ELSE
+        fim_acerto WHEN Eatual = compara_resposta3 AND jogada_correta = '1' AND fimL = '1' ELSE
+        fim_erro WHEN Eatual = compara_resposta3 AND jogada_correta = '0' ELSE
+        mostra_pergunta3 WHEN Eatual = proxima_pergunta3 ELSE
 
         -- Estados para voltar ao menu
-        fim_acerto              when Eatual=fim_acerto         and reset='0'        and fimJ0='0' else
-        menu_inicial            when Eatual=fim_acerto         and reset='1'        and fimJ0='0' else
-        fim_erro                when Eatual=fim_erro           and reset='0'        and fimJ0='0' else
-        menu_inicial            when Eatual=fim_erro           and reset='1'        and fimJ0='0' else
-        fim_timeout             when Eatual=fim_timeout        and reset='0'        and fimJ0='0' else
-        menu_inicial            when Eatual=fim_timeout        and reset='1'        and fimJ0='0' else
-        menu_inicial            when Eatual=fim_acerto         and reset='0'        and fimJ0='1' else
-        menu_inicial            when Eatual=fim_erro           and reset='0'        and fimJ0='1' else
-        menu_inicial            when Eatual=fim_timeout        and reset='0'        and fimJ0='1' else
+        fim_acerto WHEN Eatual = fim_acerto AND reset = '0' AND fimJ0 = '0' ELSE
+        menu_inicial WHEN Eatual = fim_acerto AND reset = '1' AND fimJ0 = '0' ELSE
+        fim_erro WHEN Eatual = fim_erro AND reset = '0' AND fimJ0 = '0' ELSE
+        menu_inicial WHEN Eatual = fim_erro AND reset = '1' AND fimJ0 = '0' ELSE
+        fim_timeout WHEN Eatual = fim_timeout AND reset = '0' AND fimJ0 = '0' ELSE
+        menu_inicial WHEN Eatual = fim_timeout AND reset = '1' AND fimJ0 = '0' ELSE
+        menu_inicial WHEN Eatual = fim_acerto AND reset = '0' AND fimJ0 = '1' ELSE
+        menu_inicial WHEN Eatual = fim_erro AND reset = '0' AND fimJ0 = '1' ELSE
+        menu_inicial WHEN Eatual = fim_timeout AND reset = '0' AND fimJ0 = '1' ELSE
         menu_inicial;
 
     -- logica de saída (maquina de Moore)
-    with Eatual select
-        zeraCR <=     '1' when menu_inicial,
-                      '0' when others;
-    
-    with Eatual select
-        contaCR <=    '1' when proxima_pergunta0 | proxima_pergunta1 | proxima_pergunta2 | proxima_pergunta3,
-                      '0' when others;
+    WITH Eatual SELECT
+        zeraCR <= '1' WHEN menu_inicial,
+        '0' WHEN OTHERS;
 
-    with Eatual select
-        reduzCR <= '1' when reduz_rodada1,
-                    '0' when others;
+    WITH Eatual SELECT
+        contaCR <= '1' WHEN proxima_pergunta0 | proxima_pergunta1 | proxima_pergunta2 | proxima_pergunta3,
+        '0' WHEN OTHERS;
 
-     with Eatual select
-        limpaRC <= '1' when menu_inicial |  mostra_pergunta0 | mostra_pergunta1 | mostra_pergunta2 | mostra_pergunta3  | proxima_pergunta0 | proxima_pergunta1 | proxima_pergunta2 | proxima_pergunta3,
-                    '0' when others;
+    WITH Eatual SELECT
+        reduzCR <= '1' WHEN reduz_rodada1,
+        '0' WHEN OTHERS;
 
-    with Eatual select
-        registraRC <= '1' when registra_resposta0 | registra_resposta1 | registra_resposta2 | registra_resposta3 | registra_modo,
-                        '0' when others;
+    WITH Eatual SELECT
+        limpaRC <= '1' WHEN menu_inicial | mostra_pergunta0 | mostra_pergunta1 | mostra_pergunta2 | mostra_pergunta3 | proxima_pergunta0 | proxima_pergunta1 | proxima_pergunta2 | proxima_pergunta3,
+        '0' WHEN OTHERS;
 
-    with Eatual select
-        zeraT <= '1' when registra_resposta0 | registra_resposta1 | registra_resposta2 | registra_resposta3 | menu_inicial,
-                    '0' when others;
+    WITH Eatual SELECT
+        registraRC <= '1' WHEN registra_resposta0 | registra_resposta1 | registra_resposta2 | registra_resposta3 | registra_modo,
+        '0' WHEN OTHERS;
 
-    with Eatual select
-        contaT <= '1' when espera_resposta0 | espera_resposta1 | espera_resposta2 | espera_resposta3,
-                    '0' when others;
+    WITH Eatual SELECT
+        zeraT <= '1' WHEN registra_resposta0 | registra_resposta1 | registra_resposta2 | registra_resposta3 | menu_inicial,
+        '0' WHEN OTHERS;
 
-    with Eatual select
-        zeraJ0 <=     '1' when menu_inicial | mostra_pergunta0 | mostra_pergunta1 | mostra_pergunta2 | mostra_pergunta3,
-                        '0' when others;
+    WITH Eatual SELECT
+        contaT <= '1' WHEN espera_resposta0 | espera_resposta1 | espera_resposta2 | espera_resposta3,
+        '0' WHEN OTHERS;
 
-    with Eatual select
-        contaJ0 <=     '1' when menu_inicial | fim_acerto | fim_erro | fim_timeout,
-                        '0' when others;
-    
-    with Eatual select
-        ganhou <= '1' when fim_acerto,
-                    '0' when others;
+    WITH Eatual SELECT
+        zeraJ0 <= '1' WHEN menu_inicial | mostra_pergunta0 | mostra_pergunta1 | mostra_pergunta2 | mostra_pergunta3,
+        '0' WHEN OTHERS;
 
-    with Eatual select
-        perdeu <= '1' when fim_erro | fim_timeout,
-                    '0' when others;
+    WITH Eatual SELECT
+        contaJ0 <= '1' WHEN menu_inicial | fim_acerto | fim_erro | fim_timeout,
+        '0' WHEN OTHERS;
 
-    with Eatual select
-        pronto <= '1' when fim_acerto | fim_erro | fim_timeout,
-                    '0' when others;
+    WITH Eatual SELECT
+        ganhou <= '1' WHEN fim_acerto,
+        '0' WHEN OTHERS;
 
-    with Eatual select
-        registraPR <= '1' when proxima_pergunta0 | proxima_pergunta1 | proxima_pergunta2 | proxima_pergunta3 | fim_acerto,
-                                '0' when others;
+    WITH Eatual SELECT
+        perdeu <= '1' WHEN fim_erro | fim_timeout,
+        '0' WHEN OTHERS;
 
-    with Eatual select
-        limpaPR <= '1' when menu_inicial,
-                                '0' when others;
+    WITH Eatual SELECT
+        pronto <= '1' WHEN fim_acerto | fim_erro | fim_timeout,
+        '0' WHEN OTHERS;
 
-    
+    WITH Eatual SELECT
+        registraPR <= '1' WHEN proxima_pergunta0 | proxima_pergunta1 | proxima_pergunta2 | proxima_pergunta3 | fim_acerto,
+        '0' WHEN OTHERS;
+
+    WITH Eatual SELECT
+        limpaPR <= '1' WHEN menu_inicial,
+        '0' WHEN OTHERS;
     -- saida de depuracao (db_estado)
-    with Eatual select
-        db_estado <= "0001" when menu_inicial,  -- 1
-                     "0010" when espera_resposta0,    -- 2
-                     "0011" when espera_resposta1,  -- 3
-                     "0100" when espera_resposta2,     -- 4
-                     "0101" when espera_resposta3, -- 5
-                     "1010" when fim_acerto,         -- A
-                     "1110" when fim_erro,         -- E
-                     "1111" when others;      -- F
+    WITH Eatual SELECT
+        db_estado <= "0001" WHEN menu_inicial, -- 1
+        "0010" WHEN espera_resposta0,          -- 2
+        "0011" WHEN espera_resposta1,          -- 3
+        "0100" WHEN espera_resposta2,          -- 4
+        "0101" WHEN espera_resposta3,          -- 5
+        "1010" WHEN fim_acerto,                -- A
+        "1110" WHEN fim_erro,                  -- E
+        "1111" WHEN OTHERS;                    -- F
 
-end architecture fsm;
+END ARCHITECTURE fsm;

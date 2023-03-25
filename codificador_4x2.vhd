@@ -1,20 +1,20 @@
-library ieee;
-use ieee.std_logic_1164.all;
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
 
-entity codificador_4x2 is
-    port (
-        botoes : in std_logic_vector(3 downto 0);
-        valor : out std_logic_vector(1 downto 0)
+ENTITY codificador_4x2 IS
+    PORT (
+        botoes : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+        valor  : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
     );
-end entity codificador_4x2;
+END ENTITY codificador_4x2;
 
-architecture cod4x2_arch of codificador_4x2 is
+ARCHITECTURE cod4x2_arch OF codificador_4x2 IS
 
-    begin
-        valor <= "00" when botoes="0001" else
-                 "01" when botoes="0010" else
-                 "10" when botoes="0100" else
-                 "11" when botoes="1000" else
-                 "00";
+BEGIN
+    valor <= "00" WHEN botoes = "0001" ELSE
+        "01" WHEN botoes = "0010" ELSE
+        "10" WHEN botoes = "0100" ELSE
+        "11" WHEN botoes = "1000" ELSE
+        "00";
 
-end architecture cod4x2_arch;
+END ARCHITECTURE cod4x2_arch;

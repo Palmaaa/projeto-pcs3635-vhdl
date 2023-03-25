@@ -21,85 +21,87 @@
 --     07/01/2023  2.1.1   Edson Midorikawa  revisao
 -------------------------------------------------------------------
 
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+USE ieee.numeric_std.ALL;
 
-entity ram_10x2 is
-   port (       
-       clk          : in  std_logic;
-       endereco     : in  std_logic_vector(3 downto 0);
-       dado_entrada : in  std_logic_vector(1 downto 0);
-       we           : in  std_logic;
-       ce           : in  std_logic;
-       dado_saida   : out std_logic_vector(1 downto 0)
-    );
-end entity ram_10x2;
+ENTITY ram_10x2 IS
+  PORT (
+    clk          : IN STD_LOGIC;
+    endereco     : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+    dado_entrada : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+    we           : IN STD_LOGIC;
+    ce           : IN STD_LOGIC;
+    dado_saida   : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
+  );
+END ENTITY ram_10x2;
 
 -- Dados iniciais em arquivo MIF (para sintese com Intel Quartus Prime) 
-architecture ram_mif of ram_10x2 is
-  type   arranjo_memoria is array(0 to 10) of std_logic_vector(1 downto 0);
-  signal memoria : arranjo_memoria;
-  
-  -- Configuracao do Arquivo MIF
-  attribute ram_init_file: string;
-  attribute ram_init_file of memoria: signal is "ram_conteudo_jogadas.mif";
-  
-begin
+ARCHITECTURE ram_mif OF ram_10x2 IS
+  TYPE arranjo_memoria IS ARRAY(0 TO 10) OF STD_LOGIC_VECTOR(1 DOWNTO 0);
+  SIGNAL memoria : arranjo_memoria;
 
-  process(clk)
-  begin
-    if (clk = '1' and clk'event) then
-          if ce = '0' then -- dado armazenado na subida de "we" com "ce=0"
-           
-              -- Detecta ativacao de we (ativo baixo)
-              if (we = '0') 
-                  then memoria(to_integer(unsigned(endereco))) <= dado_entrada;
-              end if;
-            
-          end if;
-      end if;
-  end process;
+  -- Configuracao do Arquivo MIF
+  ATTRIBUTE ram_init_file            : STRING;
+  ATTRIBUTE ram_init_file OF memoria : SIGNAL IS "ram_conteudo_jogadas.mif";
+
+BEGIN
+
+  PROCESS (clk)
+  BEGIN
+    IF (clk = '1' AND clk'event) THEN
+      IF ce = '0' THEN -- dado armazenado na subida de "we" com "ce=0"
+
+        -- Detecta ativacao de we (ativo baixo)
+        IF (we = '0')
+          THEN
+          memoria(to_integer(unsigned(endereco))) <= dado_entrada;
+        END IF;
+
+      END IF;
+    END IF;
+  END PROCESS;
 
   -- saida da memoria
   dado_saida <= memoria(to_integer(unsigned(endereco)));
-  
-end architecture ram_mif;
+
+END ARCHITECTURE ram_mif;
 
 -- Dados iniciais (para simulacao com Modelsim) 
-architecture ram_modelsim of ram_10x2 is
-  type   arranjo_memoria is array(0 to 10) of std_logic_vector(1 downto 0);
-  signal memoria : arranjo_memoria := (
-                                        "00",
-                                        "01",
-                                        "10",
-                                        "11",
-                                        "00",
-                                        "01",
-                                        "10",
-                                        "11",
-                                        "00",
-                                        "01",
-                                        "10"
-                                            );
-  
-begin
+ARCHITECTURE ram_modelsim OF ram_10x2 IS
+  TYPE arranjo_memoria IS ARRAY(0 TO 10) OF STD_LOGIC_VECTOR(1 DOWNTO 0);
+  SIGNAL memoria : arranjo_memoria := (
+    "00",
+    "01",
+    "10",
+    "11",
+    "00",
+    "01",
+    "10",
+    "11",
+    "00",
+    "01",
+    "10"
+  );
 
-  process(clk)
-  begin
-    if (clk = '1' and clk'event) then
-          if ce = '0' then -- dado armazenado na subida de "we" com "ce=0"
-           
-              -- Detecta ativacao de we (ativo baixo)
-              if (we = '0') 
-                  then memoria(to_integer(unsigned(endereco))) <= dado_entrada;
-              end if;
-            
-          end if;
-      end if;
-  end process;
+BEGIN
+
+  PROCESS (clk)
+  BEGIN
+    IF (clk = '1' AND clk'event) THEN
+      IF ce = '0' THEN -- dado armazenado na subida de "we" com "ce=0"
+
+        -- Detecta ativacao de we (ativo baixo)
+        IF (we = '0')
+          THEN
+          memoria(to_integer(unsigned(endereco))) <= dado_entrada;
+        END IF;
+
+      END IF;
+    END IF;
+  END PROCESS;
 
   -- saida da memoria
   dado_saida <= memoria(to_integer(unsigned(endereco)));
 
-end architecture ram_modelsim;
+END ARCHITECTURE ram_modelsim;

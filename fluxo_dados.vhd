@@ -1,248 +1,242 @@
-library ieee;
-use ieee.std_logic_1164.all;
-use ieee.numeric_std.all;
-use ieee.math_real.all;
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+USE ieee.numeric_std.ALL;
+USE ieee.math_real.ALL;
 
-entity fluxo_dados is
-  port (
-    clock : in std_logic;
-    zeraCR : in std_logic;
-    contaCR : in std_logic;
-    reduzCR: in std_logic;
-    limpaRC : in std_logic;
-    registraRC : in std_logic;
-    limpaPR : in std_logic;
-    registraPR: in std_logic;
-    contaT : in std_logic;
-    zeraT : in std_logic;
-    zeraJ0 : in std_logic;
-    contaJ0 : in std_logic;
-    botoes : in std_logic_vector (3 downto 0);
-    jogada_pulso : out std_logic;
-    jogada_correta : out std_logic;
-    jogada : out std_logic_vector (1 downto 0);
-    inicioL : out std_logic;
-    fimL : out std_logic;
-    meioT: out std_logic;
-    fimT : out std_logic;
-    fimJ0 : out std_logic;
-    leds : out std_logic_vector (1 downto 0);
-    db_memoria : out std_logic_vector (1 downto 0);
-    db_conta_premio : out std_logic_vector(3 downto 0);
-    db_rodada : out std_logic_vector (3 downto 0)
+ENTITY fluxo_dados IS
+  PORT (
+    clock           : IN STD_LOGIC;
+    zeraCR          : IN STD_LOGIC;
+    contaCR         : IN STD_LOGIC;
+    reduzCR         : IN STD_LOGIC;
+    limpaRC         : IN STD_LOGIC;
+    registraRC      : IN STD_LOGIC;
+    limpaPR         : IN STD_LOGIC;
+    registraPR      : IN STD_LOGIC;
+    contaT          : IN STD_LOGIC;
+    zeraT           : IN STD_LOGIC;
+    zeraJ0          : IN STD_LOGIC;
+    contaJ0         : IN STD_LOGIC;
+    botoes          : IN STD_LOGIC_VECTOR (3 DOWNTO 0);
+    jogada_pulso    : OUT STD_LOGIC;
+    jogada_correta  : OUT STD_LOGIC;
+    jogada          : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
+    inicioL         : OUT STD_LOGIC;
+    fimL            : OUT STD_LOGIC;
+    meioT           : OUT STD_LOGIC;
+    fimT            : OUT STD_LOGIC;
+    fimJ0           : OUT STD_LOGIC;
+    leds            : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
+    db_memoria      : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
+    db_conta_premio : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
+    db_rodada       : OUT STD_LOGIC_VECTOR (3 DOWNTO 0)
   );
-end entity;
+END ENTITY;
+ARCHITECTURE estrutural OF fluxo_dados IS
 
+  SIGNAL s_rodada       : STD_LOGIC_VECTOR (3 DOWNTO 0);
+  SIGNAL s_endereco     : STD_LOGIC_VECTOR (3 DOWNTO 0);
+  SIGNAL s_dado         : STD_LOGIC_VECTOR (1 DOWNTO 0);
+  SIGNAL s_codificado   : STD_LOGIC_VECTOR (1 DOWNTO 0);
+  SIGNAL s_resposta     : STD_LOGIC_VECTOR (1 DOWNTO 0);
+  SIGNAL s_premio_ganho : STD_LOGIC_VECTOR (3 DOWNTO 0);
 
-architecture estrutural of fluxo_dados is
+  SIGNAL reset_edge : STD_LOGIC;
+  SIGNAL s_sinal    : STD_LOGIC;
 
-  signal s_rodada : std_logic_vector (3 downto 0);
-  signal s_endereco : std_logic_vector (3 downto 0);
-  signal s_dado        : std_logic_vector (1 downto 0);
-  signal s_codificado : std_logic_vector (1 downto 0);
-  signal s_resposta      : std_logic_vector (1 downto 0);
-  signal s_premio_ganho : std_logic_vector (3 downto 0);
+  SIGNAL s_not_zera_e  : STD_LOGIC;
+  SIGNAL s_not_zera_cr : STD_LOGIC;
 
-  signal reset_edge    : std_logic;
-  signal s_sinal       : std_logic;
-
-  signal s_not_zera_e    : std_logic;
-  signal s_not_zera_cr    : std_logic;
-
-  component edge_detector
-    port (
-        clock  : in  std_logic;
-        reset  : in  std_logic;
-        sinal  : in  std_logic;
-        pulso  : out std_logic
+  COMPONENT edge_detector
+    PORT (
+      clock : IN STD_LOGIC;
+      reset : IN STD_LOGIC;
+      sinal : IN STD_LOGIC;
+      pulso : OUT STD_LOGIC
     );
-  end component;
+  END COMPONENT;
 
-  component codificador_4x2
-      port (
-        botoes : in std_logic_vector(3 downto 0);
-        valor : out std_logic_vector(1 downto 0)
+  COMPONENT codificador_4x2
+    PORT (
+      botoes : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+      valor  : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
     );
-  end component;
+  END COMPONENT;
 
-  component registrador_n
-    generic (
-        constant N: integer := 2
+  COMPONENT registrador_n
+    GENERIC (
+      CONSTANT N : INTEGER := 2
     );
-    port (
-        clock  : in  std_logic;
-        clear  : in  std_logic;
-        enable : in  std_logic;
-        D      : in  std_logic_vector (N-1 downto 0);
-        Q      : out std_logic_vector (N-1 downto 0) 
+    PORT (
+      clock  : IN STD_LOGIC;
+      clear  : IN STD_LOGIC;
+      enable : IN STD_LOGIC;
+      D      : IN STD_LOGIC_VECTOR (N - 1 DOWNTO 0);
+      Q      : OUT STD_LOGIC_VECTOR (N - 1 DOWNTO 0)
     );
-  end component;
+  END COMPONENT;
 
-  component comparador_85
-    port (
-        i_A1   : in  std_logic;
-        i_B1   : in  std_logic;
-        i_A0   : in  std_logic;
-        i_B0   : in  std_logic;
-        i_AGTB : in  std_logic;
-        i_ALTB : in  std_logic;
-        i_AEQB : in  std_logic;
-        o_AGTB : out std_logic;
-        o_ALTB : out std_logic;
-        o_AEQB : out std_logic
+  COMPONENT comparador_85
+    PORT (
+      i_A1   : IN STD_LOGIC;
+      i_B1   : IN STD_LOGIC;
+      i_A0   : IN STD_LOGIC;
+      i_B0   : IN STD_LOGIC;
+      i_AGTB : IN STD_LOGIC;
+      i_ALTB : IN STD_LOGIC;
+      i_AEQB : IN STD_LOGIC;
+      o_AGTB : OUT STD_LOGIC;
+      o_ALTB : OUT STD_LOGIC;
+      o_AEQB : OUT STD_LOGIC
     );
-  end component;
+  END COMPONENT;
 
-  component ram_10x2 is
-    port (    
-       clk          : in  std_logic;
-       endereco     : in  std_logic_vector(3 downto 0);
-       dado_entrada : in  std_logic_vector(1 downto 0);
-       we           : in  std_logic;
-       ce           : in  std_logic;
-       dado_saida   : out std_logic_vector(1 downto 0)
+  COMPONENT ram_10x2 IS
+    PORT (
+      clk          : IN STD_LOGIC;
+      endereco     : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
+      dado_entrada : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+      we           : IN STD_LOGIC;
+      ce           : IN STD_LOGIC;
+      dado_saida   : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
     );
-  end component;
+  END COMPONENT;
 
-  component contador_m is
-    generic (
-        constant M: integer := 100 -- modulo do contador
+  COMPONENT contador_m IS
+    GENERIC (
+      CONSTANT M : INTEGER := 100 -- modulo do contador
     );
-    port (
-        clock   : in  std_logic;
-        zera_as : in  std_logic;
-        zera_s  : in  std_logic;
-        conta   : in  std_logic;
-        reduz   : in  std_logic;
-        Q       : out std_logic_vector(natural(ceil(log2(real(M))))-1 downto 0);
-        fim     : out std_logic;
-        inicio  : out std_logic;
-        meio    : out std_logic
+    PORT (
+      clock   : IN STD_LOGIC;
+      zera_as : IN STD_LOGIC;
+      zera_s  : IN STD_LOGIC;
+      conta   : IN STD_LOGIC;
+      reduz   : IN STD_LOGIC;
+      Q       : OUT STD_LOGIC_VECTOR(NATURAL(ceil(log2(real(M)))) - 1 DOWNTO 0);
+      fim     : OUT STD_LOGIC;
+      inicio  : OUT STD_LOGIC;
+      meio    : OUT STD_LOGIC
     );
-  end component;
+  END COMPONENT;
 
-begin
+BEGIN
 
-  s_sinal <= botoes(0) or botoes(1) or botoes(2) or botoes(3);
+  s_sinal <= botoes(0) OR botoes(1) OR botoes(2) OR botoes(3);
 
-  reset_edge <= not s_sinal;
+  reset_edge <= NOT s_sinal;
 
   leds <= s_dado;
 
   -- Registra o valor do premio (expoente)
-  registrador_premio: registrador_n
-  generic map ( N => 4 )
-    port map (
-        clock  => clock, 
-        clear  => limpaPR, 
-        enable => registraPR, 
-        D      => s_rodada, 
-        Q      => s_premio_ganho
-    );
+  registrador_premio : registrador_n
+  GENERIC MAP(N => 4)
+  PORT MAP(
+    clock  => clock,
+    clear  => limpaPR,
+    enable => registraPR,
+    D      => s_rodada,
+    Q      => s_premio_ganho
+  );
 
-   db_conta_premio <= s_premio_ganho;
-                
+  db_conta_premio <= s_premio_ganho;
+
   -- Codifica respostas para 2 bits
-  encoder: codificador_4x2
-    port map(
-      botoes => botoes,
-      valor => s_codificado
-    );
+  encoder : codificador_4x2
+  PORT MAP(
+    botoes => botoes,
+    valor  => s_codificado
+  );
 
-  edge: edge_detector
-    port map(
-      clock => clock,
-      reset => reset_edge,
-      sinal => s_sinal,
-      pulso => jogada_pulso
-    );
+  edge : edge_detector
+  PORT MAP(
+    clock => clock,
+    reset => reset_edge,
+    sinal => s_sinal,
+    pulso => jogada_pulso
+  );
 
-  registrador: registrador_n
-  generic map ( N => 2 )
-    port map (
-        clock  => clock, 
-        clear  => limpaRC, 
-        enable => registraRC, 
-        D      => s_codificado, 
-        Q      => s_resposta
-    );
+  registrador : registrador_n
+  GENERIC MAP(N => 2)
+  PORT MAP(
+    clock  => clock,
+    clear  => limpaRC,
+    enable => registraRC,
+    D      => s_codificado,
+    Q      => s_resposta
+  );
 
-  s_not_zera_cr    <= not zeraCR;
-  
-  contador_rod: contador_m
-  generic map ( M=> 11 )
-    port map (
-        clock => clock,
-        zera_as => '0',
-        zera_s   => zeraCR,  -- clr ativo em alto
-        conta => contaCR,
-        reduz => reduzCR,
-        Q    => s_rodada,
-        meio => open,
-        inicio => inicioL,
-        fim  => fimL
-    );
+  s_not_zera_cr <= NOT zeraCR;
 
+  contador_rod : contador_m
+  GENERIC MAP(M => 11)
+  PORT MAP(
+    clock   => clock,
+    zera_as => '0',
+    zera_s  => zeraCR, -- clr ativo em alto
+    conta   => contaCR,
+    reduz   => reduzCR,
+    Q       => s_rodada,
+    meio    => OPEN,
+    inicio  => inicioL,
+    fim     => fimL
+  );
+  comparador : comparador_85
+  PORT MAP(
+    i_A1   => s_dado(1),
+    i_B1   => s_resposta(1),
+    i_A0   => s_dado(0),
+    i_B0   => s_resposta(0),
+    i_AGTB => '0',
+    i_ALTB => '0',
+    i_AEQB => '1',
+    o_AGTB => OPEN, -- saidas nao usadas
+    o_ALTB => OPEN,
+    o_AEQB => jogada_correta
+  );
 
-  comparador: comparador_85
-    port map (
-        i_A1   => s_dado(1),
-        i_B1   => s_resposta(1),
-        i_A0   => s_dado(0),
-        i_B0   => s_resposta(0),
-        i_AGTB => '0',
-        i_ALTB => '0',
-        i_AEQB => '1',
-        o_AGTB => open, -- saidas nao usadas
-        o_ALTB => open,
-        o_AEQB => jogada_correta
-    );
+  -- timeout entre perguntas
+  conta20000 : contador_m
+  GENERIC MAP(M => 20000)
+  PORT MAP(
+    clock   => clock,
+    zera_as => '0',
+    zera_s  => zeraT,
+    conta   => contaT,
+    reduz   => '0',
+    Q       => OPEN,
+    meio    => meioT,
+    inicio  => OPEN,
+    fim     => fimT
+  );
 
-    -- timeout entre perguntas
-    conta20000: contador_m
-      generic map ( M=> 20000 )
-      port map (
-        clock => clock,
-        zera_as => '0',
-        zera_s => zeraT,
-        conta => contaT,
-        reduz => '0',
-        Q => open,
-        meio => meioT,
-        inicio => open,
-        fim => fimT
-      );
-
-    -- timeout para voltar ao menu
-    conta60000: contador_m
-      generic map ( M=> 60000 )
-      port map (
-        clock => clock,
-        zera_as => '0',
-        zera_s => zeraJ0,
-        conta => contaJ0,
-        reduz => '0',
-        Q => open,
-        meio => open,
-        inicio => open,
-        fim => fimJ0
-      );
-
-      
-   s_endereco <= s_rodada;
-   ---- memoria: entity work.ram_10x2 (ram_mif)  -- usar esta linha para Intel Quartus
-   memoria: entity work.ram_10x2 (ram_modelsim) -- usar arquitetura para ModelSim
-   port map (
+  -- timeout para voltar ao menu
+  conta60000 : contador_m
+  GENERIC MAP(M => 60000)
+  PORT MAP(
+    clock   => clock,
+    zera_as => '0',
+    zera_s  => zeraJ0,
+    conta   => contaJ0,
+    reduz   => '0',
+    Q       => OPEN,
+    meio    => OPEN,
+    inicio  => OPEN,
+    fim     => fimJ0
+  );
+  s_endereco <= s_rodada;
+  ---- memoria: entity work.ram_10x2 (ram_mif)  -- usar esta linha para Intel Quartus
+  memoria : ENTITY work.ram_10x2 (ram_modelsim) -- usar arquitetura para ModelSim
+    PORT MAP(
       clk          => clock,
       endereco     => s_endereco,
       dado_entrada => s_resposta,
       we           => '1', -- we ativo em baixo
       ce           => '0',
       dado_saida   => s_dado
-   );
+    );
 
- db_rodada   <= s_rodada;
- db_memoria  <= s_dado;
- jogada <= s_resposta;
+  db_rodada  <= s_rodada;
+  db_memoria <= s_dado;
+  jogada     <= s_resposta;
 
-end architecture estrutural;
+END ARCHITECTURE estrutural;

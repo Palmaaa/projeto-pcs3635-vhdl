@@ -1,20 +1,20 @@
-library ieee;
-use ieee.std_logic_1164.all;
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
 
-entity letter7seg is
-    port (
-        letter : in  std_logic_vector(1 downto 0);
-        sseg : out std_logic_vector(6 downto 0)
+ENTITY letter7seg IS
+    PORT (
+        letter : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+        sseg   : OUT STD_LOGIC_VECTOR(6 DOWNTO 0)
     );
-end entity letter7seg;
+END ENTITY letter7seg;
 
-architecture comportamental of letter7seg is
-begin
+ARCHITECTURE comportamental OF letter7seg IS
+BEGIN
 
-  sseg <= "0001000" when letter="00" else
-          "0000011" when letter="01" else
-          "1000110" when letter="10" else
-          "0100001" when letter="11" else
-          "1111111";
+    sseg <= "0001000" WHEN letter = "00" ELSE
+        "0000011" WHEN letter = "01" ELSE
+        "1000110" WHEN letter = "10" ELSE
+        "0100001" WHEN letter = "11" ELSE
+        "1111111";
 
-end architecture comportamental;
+END ARCHITECTURE comportamental;
