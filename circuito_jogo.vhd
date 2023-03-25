@@ -24,6 +24,9 @@ END ENTITY;
 
 ARCHITECTURE arch OF circuito_jogo IS
 
+  -- Clock division
+  SIGNAL s_div_clock : STD_LOGIC;
+
   -- FD to UC
   SIGNAL s_jogada_pulso   : STD_LOGIC;
   SIGNAL s_jogada_correta : STD_LOGIC;
@@ -118,6 +121,13 @@ ARCHITECTURE arch OF circuito_jogo IS
     );
   END COMPONENT;
 
+  COMPONENT freq_divider IS
+    PORT (
+      clock_in  : IN STD_LOGIC;
+      clock_out : OUT STD_LOGIC
+    );
+  END COMPONENT;
+
   COMPONENT hexa7seg IS
     PORT (
       hexa : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
@@ -134,9 +144,15 @@ ARCHITECTURE arch OF circuito_jogo IS
 
 BEGIN
 
+  div_clk : freq_divider
+  PORT MAP(
+    clock_in  => clock,
+    clock_out => s_div_clock
+  );
+
   UC : unidade_controle
   PORT MAP(
-    clock          => clock,
+    clock          => s_div_clock,
     reset          => reset,
     jogada_pulso   => s_jogada_pulso,
     jogada_correta => s_jogada_correta,
@@ -165,7 +181,7 @@ BEGIN
 
   FD : fluxo_dados
   PORT MAP(
-    clock           => clock,
+    clock           => s_div_clock,
     zeraCR          => s_zeraCR,
     contaCR         => s_contaCR,
     reduzCR         => s_reduzCR,
