@@ -30,7 +30,6 @@ architecture tb of circuito_jogo_acerto_modo2_tb is
   port (
     clock : in std_logic;
     reset : in std_logic;
-    iniciar : in std_logic;
     botoes : in std_logic_vector(3 downto 0);
     leds : out std_logic_vector (1 downto 0);
     pronto : out std_logic;
@@ -51,7 +50,6 @@ architecture tb of circuito_jogo_acerto_modo2_tb is
   ---- Declaracao de sinais de entrada para conectar o componente
   signal clk_in     : std_logic := '0';
   signal rst_in     : std_logic := '0';
-  signal iniciar_in : std_logic := '0';
   signal botoes_in  : std_logic_vector(3 downto 0) := "0000";
 
   ---- Declaracao dos sinais de saida
@@ -84,7 +82,6 @@ begin
        (
           clock           => clk_in,
           reset           => rst_in,
-          iniciar         => iniciar_in,
           botoes          => botoes_in,
           leds            => leds_out,
           pronto          => pronto_out,
@@ -114,12 +111,6 @@ begin
     wait for clockPeriod;
     rst_in <= '0';
 
-
-    -- pulso do sinal de Iniciar (muda na borda de descida do clock)
-    wait until falling_edge(clk_in);
-    iniciar_in <= '1';
-    wait until falling_edge(clk_in);
-    iniciar_in <= '0';
 
     -- espera para inicio dos testes
     wait for 3*clockPeriod;

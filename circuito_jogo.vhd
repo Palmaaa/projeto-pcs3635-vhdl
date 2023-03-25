@@ -5,7 +5,6 @@ entity circuito_jogo is
   port (
     clock : in std_logic;
     reset : in std_logic;
-    iniciar : in std_logic;
     botoes : in std_logic_vector(3 downto 0);
     leds : out std_logic_vector (1 downto 0);
     pronto : out std_logic;
@@ -93,7 +92,6 @@ architecture arch of circuito_jogo is
     port (
       clock : in std_logic;
       reset : in std_logic;
-      iniciar : in std_logic;
       jogada_pulso : in std_logic;
       jogada_correta : in std_logic;
       jogada : in std_logic_vector(1 downto 0);
@@ -140,7 +138,6 @@ architecture arch of circuito_jogo is
       port map (
         clock     => clock,
         reset     => reset,
-        iniciar   => iniciar,
         jogada_pulso    => s_jogada_pulso,
         jogada_correta     => s_jogada_correta,
         jogada => s_jogada,

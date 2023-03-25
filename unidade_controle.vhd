@@ -23,7 +23,6 @@ entity unidade_controle is
     port (
         clock : in std_logic;
         reset : in std_logic;
-        iniciar : in std_logic;
         jogada_pulso : in std_logic;
         jogada_correta : in std_logic;
         jogada : in std_logic_vector(1 downto 0);
@@ -144,15 +143,15 @@ begin
         mostra_pergunta3        when Eatual=proxima_pergunta3                                       else
 
         -- Estados para voltar ao menu
-        fim_acerto              when Eatual=fim_acerto         and iniciar='0'        and fimJ0='0' else
-        menu_inicial            when Eatual=fim_acerto         and iniciar='1'        and fimJ0='0' else
-        fim_erro                when Eatual=fim_erro           and iniciar='0'        and fimJ0='0' else
-        menu_inicial            when Eatual=fim_erro           and iniciar='1'        and fimJ0='0' else
-        fim_timeout             when Eatual=fim_timeout        and iniciar='0'        and fimJ0='0' else
-        menu_inicial            when Eatual=fim_timeout        and iniciar='1'        and fimJ0='0' else
-        menu_inicial            when Eatual=fim_acerto         and iniciar='0'        and fimJ0='1' else
-        menu_inicial            when Eatual=fim_erro           and iniciar='0'        and fimJ0='1' else
-        menu_inicial            when Eatual=fim_timeout        and iniciar='0'        and fimJ0='1' else
+        fim_acerto              when Eatual=fim_acerto         and reset='0'        and fimJ0='0' else
+        menu_inicial            when Eatual=fim_acerto         and reset='1'        and fimJ0='0' else
+        fim_erro                when Eatual=fim_erro           and reset='0'        and fimJ0='0' else
+        menu_inicial            when Eatual=fim_erro           and reset='1'        and fimJ0='0' else
+        fim_timeout             when Eatual=fim_timeout        and reset='0'        and fimJ0='0' else
+        menu_inicial            when Eatual=fim_timeout        and reset='1'        and fimJ0='0' else
+        menu_inicial            when Eatual=fim_acerto         and reset='0'        and fimJ0='1' else
+        menu_inicial            when Eatual=fim_erro           and reset='0'        and fimJ0='1' else
+        menu_inicial            when Eatual=fim_timeout        and reset='0'        and fimJ0='1' else
         menu_inicial;
 
     -- logica de saída (maquina de Moore)
