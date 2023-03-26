@@ -69,7 +69,7 @@ ARCHITECTURE tb OF circuito_jogo_acerto_modo3_tb IS
 
   -- Configurações do clock
   SIGNAL keep_simulating : STD_LOGIC := '0';  -- delimita o tempo de geração do clock
-  CONSTANT clockPeriod   : TIME      := 1 ms; -- frequencia 1kHz
+  CONSTANT clockPeriod   : TIME      := 20_000 ns; -- frequencia 50kHz
 
 BEGIN
   -- Gerador de clock: executa enquanto 'keep_simulating = 1', com o período especificado. 
@@ -106,83 +106,83 @@ BEGIN
 
     -- gera pulso de reset (1 periodo de clock)
     rst_in <= '1';
-    WAIT FOR clockPeriod;
+    WAIT FOR clockPeriod * 50;
     rst_in <= '0';
 
     -- espera para inicio dos testes
-    WAIT FOR 3 * clockPeriod;
+    WAIT FOR 3 * clockPeriod * 50;
     WAIT UNTIL falling_edge(clk_in);
-    WAIT FOR 15 * clockPeriod;
+    WAIT FOR 15 * clockPeriod * 50;
     botoes_in <= "1000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 0
     botoes_in <= "0001";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 1
     botoes_in <= "0010";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 2
     botoes_in <= "0100";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 3
     botoes_in <= "1000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 4
     botoes_in <= "0001";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 5
     botoes_in <= "0010";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 6
     botoes_in <= "0100";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 7
     botoes_in <= "1000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 8
     botoes_in <= "0001";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 9
     botoes_in <= "0010";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- Jogada da rodada 10
     botoes_in <= "0100";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "0000";
-    WAIT FOR 5 * clockPeriod;
+    WAIT FOR 5 * clockPeriod * 50;
 
     ---- final do testbench
     ASSERT false REPORT "fim da simulacao" SEVERITY note;
