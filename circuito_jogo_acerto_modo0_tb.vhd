@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------
 -- Arquivo de teste com clock 1000x menor do que o da FPGA a fim de tornar
 -- os tempos de simulacoes no ModelSim apreciaveis. Para usar, reduzir em 
--- 1000x os tamanhos dos contadores de timeout.
+-- 1000x o valor do divisor de frequencia em circuito_jogo (25000 -> 25).
 
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
@@ -38,10 +38,10 @@ ARCHITECTURE tb OF circuito_jogo_acerto_modo0_tb IS
   END COMPONENT;
 
   ---- Declaracao de sinais de entrada para conectar o componente
-  SIGNAL clk_in    : STD_LOGIC                    := '0';
-  SIGNAL rst_in    : STD_LOGIC                    := '1';
-  SIGNAL botoes_in : STD_LOGIC_VECTOR(3 DOWNTO 0) := "1111";
-  SIGNAL gabarito_in : STD_LOGIC_VECTOR(1 DOWNTO 0) : "00";
+  SIGNAL clk_in      : STD_LOGIC                    := '0';
+  SIGNAL rst_in      : STD_LOGIC                    := '1';
+  SIGNAL botoes_in   : STD_LOGIC_VECTOR(3 DOWNTO 0) := "1111";
+  SIGNAL gabarito_in : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
 
   ---- Declaracao dos sinais de saida
   SIGNAL ganhou_out         : STD_LOGIC                    := '0';
@@ -101,90 +101,98 @@ BEGIN
     WAIT FOR 3 * clockPeriod * 50;
     WAIT UNTIL falling_edge(clk_in);
     WAIT FOR 15 * clockPeriod * 50;
-    botoes_in <= "1101";
+    botoes_in <= "1110";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 0
     gabarito_in <= "00";
-    botoes_in <= "1110";
+    botoes_in   <= "1110";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 1
     gabarito_in <= "01";
-    botoes_in <= "1101";
+    botoes_in   <= "1101";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 2
     gabarito_in <= "10";
-    botoes_in <= "1011";
+    botoes_in   <= "1011";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 3, errada
     gabarito_in <= "11";
-    botoes_in <= "1011";
+    botoes_in   <= "1011";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 3, errada
     gabarito_in <= "11";
-    botoes_in <= "1101";
+    botoes_in   <= "1101";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 3, correta
-    botoes_in <= "0111";
+    gabarito_in <= "11";
+    botoes_in   <= "0111";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 4
-    botoes_in <= "1110";
+    gabarito_in <= "00";
+    botoes_in   <= "1110";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 5
-    botoes_in <= "1011";
+    gabarito_in <= "01";
+    botoes_in   <= "1101";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 6
-    botoes_in <= "1011";
+    gabarito_in <= "10";
+    botoes_in   <= "1011";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 7
-    botoes_in <= "0111";
+    gabarito_in <= "11";
+    botoes_in   <= "0111";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 8
-    botoes_in <= "1110";
+    gabarito_in <= "00";
+    botoes_in   <= "1110";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 9
-    botoes_in <= "1101";
+    gabarito_in <= "01";
+    botoes_in   <= "1101";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
 
     ---- resposta da pergunta 10
-    botoes_in <= "1011";
+    gabarito_in <= "10";
+    botoes_in   <= "1011";
     WAIT FOR 5 * clockPeriod * 50;
     botoes_in <= "1111";
     WAIT FOR 5 * clockPeriod * 50;
@@ -193,6 +201,5 @@ BEGIN
     ASSERT false REPORT "fim da simulacao" SEVERITY note;
     keep_simulating <= '0';
 
-    WAIT; -- fim da simulação: processo aguarda indefinidamente
   END PROCESS;
 END ARCHITECTURE;
