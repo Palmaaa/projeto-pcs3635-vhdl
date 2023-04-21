@@ -1,19 +1,7 @@
 --------------------------------------------------------------------------
--- Arquivo   : circuito_exp4_tb_modelo.vhd
--- Projeto   : Experiencia 04 - Desenvolvimento de Projeto de
---                              Circuitos Digitais com FPGA
---------------------------------------------------------------------------
--- Descricao : modelo de testbench para simulação com ModelSim
---
---             implementa um Cenário de Teste do circuito
---             com 4 respostas certas e erro na quinta resposta
---------------------------------------------------------------------------
--- Revisoes  :
---     Data        Versao  Autor             Descricao
---     01/02/2020  1.0     Edson Midorikawa  criacao
---     27/01/2021  1.1     Edson Midorikawa  revisao
---     27/01/2022  1.2     Edson Midorikawa  revisao e adaptacao
---------------------------------------------------------------------------
+-- Arquivo de teste com clock 1000x menor do que o da FPGA a fim de tornar
+-- os tempos de simulacoes no ModelSim apreciaveis. Para usar, reduzir em 
+-- 1000x os tamanhos dos contadores de timeout.
 
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
