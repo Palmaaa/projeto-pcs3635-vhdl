@@ -6,7 +6,7 @@
 -- Descricao : modelo de testbench para simulação com ModelSim
 --
 --             implementa um Cenário de Teste do circuito
---             com 4 jogadas certas e erro na quinta jogada
+--             com 4 respostas certas e erro na quinta resposta
 --------------------------------------------------------------------------
 -- Revisoes  :
 --     Data        Versao  Autor             Descricao
@@ -36,12 +36,12 @@ ARCHITECTURE tb OF circuito_jogo_timeout_modo1_tb IS
       ganhou            : OUT STD_LOGIC;
       perdeu            : OUT STD_LOGIC;
       db_clock          : OUT STD_LOGIC;
-      db_tem_jogada     : OUT STD_LOGIC;
-      db_jogada_correta : OUT STD_LOGIC;
+      db_tem_resposta     : OUT STD_LOGIC;
+      db_acertou : OUT STD_LOGIC;
       db_timeout        : OUT STD_LOGIC;
       db_memoria        : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
-      db_jogada_feita   : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
-      db_rodada         : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
+      db_resposta_feita   : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
+      db_pergunta         : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
       db_premio         : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
       db_estado         : OUT STD_LOGIC_VECTOR (6 DOWNTO 0)
     );
@@ -58,13 +58,13 @@ ARCHITECTURE tb OF circuito_jogo_timeout_modo1_tb IS
   SIGNAL pronto_out         : STD_LOGIC                    := '0';
   SIGNAL leds_out           : STD_LOGIC_VECTOR(1 DOWNTO 0) := "00";
   SIGNAL clock_out          : STD_LOGIC                    := '0';
-  SIGNAL tem_jogada_out     : STD_LOGIC                    := '0';
-  SIGNAL jogada_correta_out : STD_LOGIC                    := '0';
+  SIGNAL tem_resposta_out     : STD_LOGIC                    := '0';
+  SIGNAL acertou_out : STD_LOGIC                    := '0';
   SIGNAL timeout_out        : STD_LOGIC;
   SIGNAL contagem_out       : STD_LOGIC_VECTOR(6 DOWNTO 0) := "0000000";
   SIGNAL memoria_out        : STD_LOGIC_VECTOR(6 DOWNTO 0) := "0000000";
-  SIGNAL jogada_feita_out   : STD_LOGIC_VECTOR(6 DOWNTO 0) := "0000000";
-  SIGNAL rodada_out         : STD_LOGIC_VECTOR(6 DOWNTO 0) := "0000000";
+  SIGNAL resposta_feita_out   : STD_LOGIC_VECTOR(6 DOWNTO 0) := "0000000";
+  SIGNAL pergunta_out         : STD_LOGIC_VECTOR(6 DOWNTO 0) := "0000000";
   SIGNAL estado_out         : STD_LOGIC_VECTOR(6 DOWNTO 0) := "0000000";
 
   -- Configurações do clock
@@ -88,12 +88,12 @@ BEGIN
     ganhou            => ganhou_out,
     perdeu            => perdeu_out,
     db_clock          => clock_out,
-    db_tem_jogada     => tem_jogada_out,
-    db_jogada_correta => jogada_correta_out,
+    db_tem_resposta     => tem_resposta_out,
+    db_acertou => acertou_out,
     db_timeout        => timeout_out,
     db_memoria        => memoria_out,
-    db_jogada_feita   => jogada_feita_out,
-    db_rodada         => rodada_out,
+    db_resposta_feita   => resposta_feita_out,
+    db_pergunta         => pergunta_out,
     db_estado         => estado_out
   );
   stimulus : PROCESS IS
@@ -118,31 +118,31 @@ BEGIN
     botoes_in <= "0000";
     WAIT FOR 5 * clockPeriod;
 
-    ---- Jogada da rodada 0
+    ---- resposta da pergunta 0
     botoes_in <= "0001";
     WAIT FOR 5 * clockPeriod;
     botoes_in <= "0000";
     WAIT FOR 5 * clockPeriod;
 
-    ---- Jogada da rodada 1
+    ---- resposta da pergunta 1
     botoes_in <= "0010";
     WAIT FOR 5 * clockPeriod;
     botoes_in <= "0000";
     WAIT FOR 5 * clockPeriod;
 
-    ---- Jogada da rodada 2
+    ---- resposta da pergunta 2
     botoes_in <= "0100";
     WAIT FOR 5 * clockPeriod;
     botoes_in <= "0000";
     WAIT FOR 5 * clockPeriod;
 
-    ---- Jogada da rodada 3, errada
+    ---- resposta da pergunta 3, errada
     botoes_in <= "0100";
     WAIT FOR 5 * clockPeriod;
     botoes_in <= "0000";
     WAIT FOR 5 * clockPeriod;
 
-    ---- Jogada da rodada 0, perder por timeout
+    ---- resposta da pergunta 0, perder por timeout
     WAIT FOR 20000 * clockPeriod;
 
     WAIT FOR 15 * clockPeriod;

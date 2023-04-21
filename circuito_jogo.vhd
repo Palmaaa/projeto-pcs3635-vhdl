@@ -6,17 +6,19 @@ ENTITY circuito_jogo IS
     clock             : IN STD_LOGIC;
     reset             : IN STD_LOGIC;
     botoes            : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-    leds              : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
-    pronto            : OUT STD_LOGIC;
+    gabarito          : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+    resposta          : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
+    acertou           : OUT STD_LOGIC;
+    conta_espera      : OUT STD_LOGIC;
+    reiniciar         : OUT STD_LOGIC;
     ganhou            : OUT STD_LOGIC;
     perdeu            : OUT STD_LOGIC;
-    db_clock          : OUT STD_LOGIC;
-    db_tem_jogada     : OUT STD_LOGIC;
-    db_jogada_correta : OUT STD_LOGIC;
+    escolheu_menu     : OUT STD_LOGIC;
+    db_respondeu      : OUT STD_LOGIC;
     db_timeout        : OUT STD_LOGIC;
     db_memoria        : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
-    db_jogada_feita   : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
-    db_rodada         : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
+    db_resposta_feita : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
+    db_pergunta       : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
     db_premio         : OUT STD_LOGIC_VECTOR (6 DOWNTO 0);
     db_estado         : OUT STD_LOGIC_VECTOR (6 DOWNTO 0)
   );
@@ -28,45 +30,45 @@ ARCHITECTURE arch OF circuito_jogo IS
   SIGNAL s_div_clock : STD_LOGIC;
 
   -- FD to UC
-  SIGNAL s_jogada_pulso   : STD_LOGIC;
-  SIGNAL s_jogada_correta : STD_LOGIC;
-  SIGNAL s_inicioL        : STD_LOGIC;
+  SIGNAL s_resposta_pulso : STD_LOGIC;
+  SIGNAL s_acertou        : STD_LOGIC;
+  SIGNAL s_posmeioL       : STD_LOGIC;
   SIGNAL s_fimL           : STD_LOGIC;
   SIGNAL s_meioT          : STD_LOGIC;
   SIGNAL s_fimT           : STD_LOGIC;
   SIGNAL s_fimJ0          : STD_LOGIC;
-  SIGNAL s_jogada         : STD_LOGIC_VECTOR(1 DOWNTO 0);
+  SIGNAL s_resposta       : STD_LOGIC_VECTOR(1 DOWNTO 0);
 
   -- UC to FD
   SIGNAL s_zeraCR     : STD_LOGIC;
   SIGNAL s_contaCR    : STD_LOGIC;
-  SIGNAL s_reduzCR    : STD_LOGIC;
   SIGNAL s_limpaRC    : STD_LOGIC;
   SIGNAL s_registraRC : STD_LOGIC;
   SIGNAL s_zeraT      : STD_LOGIC;
   SIGNAL s_contaT     : STD_LOGIC;
   SIGNAL s_zeraJ0     : STD_LOGIC;
   SIGNAL s_contaJ0    : STD_LOGIC;
+  SIGNAL s_zeraEP     : STD_LOGIC;
   SIGNAL s_limpaPR    : STD_LOGIC;
   SIGNAL s_registraPR : STD_LOGIC;
+  SIGNAL s_compara    : STD_LOGIC;
 
   -- Sinais de depuracao aos displays
-  SIGNAL s_contagem         : STD_LOGIC_VECTOR (3 DOWNTO 0);
-  SIGNAL s_rodada           : STD_LOGIC_VECTOR (3 DOWNTO 0);
-  SIGNAL s_memoria          : STD_LOGIC_VECTOR (1 DOWNTO 0);
-  SIGNAL s_memoria_ext      : STD_LOGIC_VECTOR (3 DOWNTO 0);
-  SIGNAL s_jogada_feita     : STD_LOGIC_VECTOR (1 DOWNTO 0);
-  SIGNAL s_jogada_feita_ext : STD_LOGIC_VECTOR (3 DOWNTO 0);
-  SIGNAL s_estado           : STD_LOGIC_VECTOR (3 DOWNTO 0);
-  SIGNAL s_conta_premio     : STD_LOGIC_VECTOR(3 DOWNTO 0);
-  SIGNAL s_premio           : STD_LOGIC_VECTOR(10 DOWNTO 0);
+  SIGNAL s_contagem           : STD_LOGIC_VECTOR (3 DOWNTO 0);
+  SIGNAL s_pergunta           : STD_LOGIC_VECTOR (3 DOWNTO 0);
+  SIGNAL s_memoria            : STD_LOGIC_VECTOR (1 DOWNTO 0);
+  SIGNAL s_memoria_ext        : STD_LOGIC_VECTOR (3 DOWNTO 0);
+  SIGNAL s_resposta_feita     : STD_LOGIC_VECTOR (1 DOWNTO 0);
+  SIGNAL s_resposta_feita_ext : STD_LOGIC_VECTOR (3 DOWNTO 0);
+  SIGNAL s_estado             : STD_LOGIC_VECTOR (3 DOWNTO 0);
+  SIGNAL s_conta_premio       : STD_LOGIC_VECTOR(3 DOWNTO 0);
+  SIGNAL s_premio             : STD_LOGIC_VECTOR(10 DOWNTO 0);
 
   COMPONENT fluxo_dados
     PORT (
       clock           : IN STD_LOGIC;
       zeraCR          : IN STD_LOGIC;
       contaCR         : IN STD_LOGIC;
-      reduzCR         : IN STD_LOGIC;
       limpaRC         : IN STD_LOGIC;
       registraRC      : IN STD_LOGIC;
       limpaPR         : IN STD_LOGIC;
@@ -75,19 +77,22 @@ ARCHITECTURE arch OF circuito_jogo IS
       zeraT           : IN STD_LOGIC;
       zeraJ0          : IN STD_LOGIC;
       contaJ0         : IN STD_LOGIC;
+      zeraEP          : IN STD_LOGIC;
+      compara         : IN STD_LOGIC;
+      gabarito        : IN STD_LOGIC_VECTOR (1 DOWNTO 0);
       botoes          : IN STD_LOGIC_VECTOR (3 DOWNTO 0);
-      jogada_pulso    : OUT STD_LOGIC;
-      jogada_correta  : OUT STD_LOGIC;
-      jogada          : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
-      inicioL         : OUT STD_LOGIC;
+      resposta_pulso  : OUT STD_LOGIC;
+      acertou         : OUT STD_LOGIC;
+      conta_espera    : OUT STD_LOGIC;
+      posmeioL        : OUT STD_LOGIC;
       fimL            : OUT STD_LOGIC;
       meioT           : OUT STD_LOGIC;
       fimT            : OUT STD_LOGIC;
       fimJ0           : OUT STD_LOGIC;
-      leds            : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
+      resposta        : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
       db_memoria      : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
       db_conta_premio : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
-      db_rodada       : OUT STD_LOGIC_VECTOR (3 DOWNTO 0)
+      db_pergunta     : OUT STD_LOGIC_VECTOR (3 DOWNTO 0)
     );
   END COMPONENT;
 
@@ -95,10 +100,10 @@ ARCHITECTURE arch OF circuito_jogo IS
     PORT (
       clock          : IN STD_LOGIC;
       reset          : IN STD_LOGIC;
-      jogada_pulso   : IN STD_LOGIC;
-      jogada_correta : IN STD_LOGIC;
-      jogada         : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
-      inicioL        : IN STD_LOGIC;
+      resposta_pulso : IN STD_LOGIC;
+      acertou        : IN STD_LOGIC;
+      resposta       : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
+      posmeioL       : IN STD_LOGIC;
       fimL           : IN STD_LOGIC;
       meioT          : IN STD_LOGIC;
       fimT           : IN STD_LOGIC;
@@ -114,15 +119,22 @@ ARCHITECTURE arch OF circuito_jogo IS
       contaT         : OUT STD_LOGIC;
       zeraJ0         : OUT STD_LOGIC;
       contaJ0        : OUT STD_LOGIC;
+      zeraEP         : OUT STD_LOGIC;
+      compara        : OUT STD_LOGIC;
+      escolheu_menu  : OUT STD_LOGIC;
       ganhou         : OUT STD_LOGIC;
       perdeu         : OUT STD_LOGIC;
-      pronto         : OUT STD_LOGIC;
+      reiniciar      : OUT STD_LOGIC;
       db_estado      : OUT STD_LOGIC_VECTOR(3 DOWNTO 0)
     );
   END COMPONENT;
 
   COMPONENT freq_divider IS
+    GENERIC (
+      CONSTANT R : INTEGER := 1000
+    );
     PORT (
+      reset     : IN STD_LOGIC;
       clock_in  : IN STD_LOGIC;
       clock_out : OUT STD_LOGIC
     );
@@ -145,7 +157,9 @@ ARCHITECTURE arch OF circuito_jogo IS
 BEGIN
 
   div_clk : freq_divider
+  GENERIC MAP(R => 25000)
   PORT MAP(
+    reset     => '0',
     clock_in  => clock,
     clock_out => s_div_clock
   );
@@ -154,17 +168,16 @@ BEGIN
   PORT MAP(
     clock          => s_div_clock,
     reset          => reset,
-    jogada_pulso   => s_jogada_pulso,
-    jogada_correta => s_jogada_correta,
-    jogada         => s_jogada,
-    inicioL        => s_inicioL,
+    resposta_pulso => s_resposta_pulso,
+    acertou        => s_acertou,
+    resposta       => s_resposta,
+    posmeioL       => s_posmeioL,
     fimL           => s_fimL,
     meioT          => s_meioT,
     fimT           => s_fimT,
     fimJ0          => s_fimJ0,
     zeraCR         => s_zeraCR,
     contaCR        => s_contaCR,
-    reduzCR        => s_reduzCR,
     limpaRC        => s_limpaRC,
     registraRC     => s_registraRC,
     limpaPR        => s_limpaPR,
@@ -173,9 +186,12 @@ BEGIN
     contaT         => s_contaT,
     zeraJ0         => s_zeraJ0,
     contaJ0        => s_contaJ0,
+    compara        => s_compara,
+    zeraEP         => s_zeraEP,
+    escolheu_menu  => escolheu_menu,
     ganhou         => ganhou,
     perdeu         => perdeu,
-    pronto         => pronto,
+    reiniciar      => reiniciar,
     db_estado      => s_estado
   );
 
@@ -184,7 +200,6 @@ BEGIN
     clock           => s_div_clock,
     zeraCR          => s_zeraCR,
     contaCR         => s_contaCR,
-    reduzCR         => s_reduzCR,
     limpaRC         => s_limpaRC,
     registraRC      => s_registraRC,
     limpaPR         => s_limpaPR,
@@ -193,25 +208,31 @@ BEGIN
     contaT          => s_contaT,
     zeraJ0          => s_zeraJ0,
     contaJ0         => s_contaJ0,
+    zeraEP          => s_zeraEP,
+    compara         => s_compara,
+    gabarito        => gabarito,
     botoes          => botoes,
-    jogada_pulso    => s_jogada_pulso,
-    jogada_correta  => s_jogada_correta,
-    jogada          => s_jogada,
+    resposta_pulso  => s_resposta_pulso,
+    acertou         => s_acertou,
+    resposta        => s_resposta,
     fimL            => s_fimL,
-    inicioL         => s_inicioL,
+    posmeioL        => s_posmeioL,
     meioT           => s_meioT,
     fimT            => s_fimT,
     fimJ0           => s_fimJ0,
-    leds            => leds,
-    db_rodada       => s_rodada,
+    conta_espera    => conta_espera,
+    db_pergunta     => s_pergunta,
     db_memoria      => s_memoria,
     db_conta_premio => s_conta_premio
   );
 
+  acertou  <= s_acertou;
+  resposta <= s_resposta;
+
   HEX0 : hexa7seg
   PORT MAP(
-    s_rodada,
-    db_rodada
+    s_pergunta,
+    db_pergunta
   );
 
   HEX1 : letter7seg
@@ -222,8 +243,8 @@ BEGIN
 
   HEX2 : letter7seg
   PORT MAP(
-    s_jogada,
-    db_jogada_feita
+    s_resposta,
+    db_resposta_feita
   );
 
   HEX4 : hexa7seg
@@ -238,8 +259,6 @@ BEGIN
     db_estado
   );
 
-  db_clock          <= clock;
-  db_tem_jogada     <= s_jogada_pulso;
-  db_jogada_correta <= s_jogada_correta;
-  db_timeout        <= s_fimT;
+  db_respondeu <= s_resposta_pulso;
+  db_timeout   <= s_fimT;
 END ARCHITECTURE;

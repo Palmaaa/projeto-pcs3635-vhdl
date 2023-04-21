@@ -39,11 +39,10 @@ ENTITY contador_m IS
         zera_as : IN STD_LOGIC;
         zera_s  : IN STD_LOGIC;
         conta   : IN STD_LOGIC;
-        reduz   : IN STD_LOGIC;
         Q       : OUT STD_LOGIC_VECTOR(NATURAL(ceil(log2(real(M)))) - 1 DOWNTO 0);
         fim     : OUT STD_LOGIC;
-        inicio  : OUT STD_LOGIC;
-        meio    : OUT STD_LOGIC
+        meio    : OUT STD_LOGIC;
+        posmeio : OUT STD_LOGIC
     );
 END ENTITY contador_m;
 
@@ -58,17 +57,11 @@ BEGIN
         ELSIF rising_edge(clock) THEN
             IF zera_s = '1' THEN
                 IQ <= 0;
-            ELSIF conta = '1' AND reduz = '0' THEN
+            ELSIF conta = '1' THEN
                 IF IQ = M - 1 THEN
                     IQ <= 0;
                 ELSE
                     IQ <= IQ + 1;
-                END IF;
-            ELSIF reduz = '1' AND conta = '0' THEN
-                IF IQ > 2 THEN
-                    IQ <= IQ - 2;
-                ELSE
-                    IQ <= 0;
                 END IF;
             ELSE
                 IQ <= IQ;
@@ -80,12 +73,12 @@ BEGIN
     fim <= '1' WHEN IQ = M - 1 ELSE
         '0';
 
-    -- saida inicio
-    inicio <= '1' WHEN IQ = 0 ELSE
-        '0';
-
     -- saida meio
     meio <= '1' WHEN IQ = M/2 - 1 ELSE
+        '0';
+
+    -- saida posmeio
+    posmeio <= '1' WHEN IQ > M/2 - 1 ELSE
         '0';
 
     -- saida Q

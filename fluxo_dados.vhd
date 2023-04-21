@@ -8,7 +8,6 @@ ENTITY fluxo_dados IS
     clock           : IN STD_LOGIC;
     zeraCR          : IN STD_LOGIC;
     contaCR         : IN STD_LOGIC;
-    reduzCR         : IN STD_LOGIC;
     limpaRC         : IN STD_LOGIC;
     registraRC      : IN STD_LOGIC;
     limpaPR         : IN STD_LOGIC;
@@ -17,29 +16,32 @@ ENTITY fluxo_dados IS
     zeraT           : IN STD_LOGIC;
     zeraJ0          : IN STD_LOGIC;
     contaJ0         : IN STD_LOGIC;
+    zeraEP          : IN STD_LOGIC;
+    compara         : IN STD_LOGIC;
+    gabarito        : IN STD_LOGIC_VECTOR (1 DOWNTO 0);
     botoes          : IN STD_LOGIC_VECTOR (3 DOWNTO 0);
-    jogada_pulso    : OUT STD_LOGIC;
-    jogada_correta  : OUT STD_LOGIC;
-    jogada          : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
-    inicioL         : OUT STD_LOGIC;
+    resposta_pulso  : OUT STD_LOGIC;
+    acertou         : OUT STD_LOGIC;
+    conta_espera    : OUT STD_LOGIC;
+    posmeioL        : OUT STD_LOGIC;
     fimL            : OUT STD_LOGIC;
     meioT           : OUT STD_LOGIC;
     fimT            : OUT STD_LOGIC;
     fimJ0           : OUT STD_LOGIC;
-    leds            : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
+    resposta        : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
     db_memoria      : OUT STD_LOGIC_VECTOR (1 DOWNTO 0);
     db_conta_premio : OUT STD_LOGIC_VECTOR(3 DOWNTO 0);
-    db_rodada       : OUT STD_LOGIC_VECTOR (3 DOWNTO 0)
+    db_pergunta     : OUT STD_LOGIC_VECTOR (3 DOWNTO 0)
   );
 END ENTITY;
 ARCHITECTURE estrutural OF fluxo_dados IS
 
-  SIGNAL s_rodada       : STD_LOGIC_VECTOR (3 DOWNTO 0);
-  SIGNAL s_endereco     : STD_LOGIC_VECTOR (3 DOWNTO 0);
-  SIGNAL s_dado         : STD_LOGIC_VECTOR (1 DOWNTO 0);
+  SIGNAL s_pergunta     : STD_LOGIC_VECTOR (3 DOWNTO 0);
   SIGNAL s_codificado   : STD_LOGIC_VECTOR (1 DOWNTO 0);
   SIGNAL s_resposta     : STD_LOGIC_VECTOR (1 DOWNTO 0);
   SIGNAL s_premio_ganho : STD_LOGIC_VECTOR (3 DOWNTO 0);
+  SIGNAL s_neg_botoes   : STD_LOGIC_VECTOR (3 DOWNTO 0);
+  SIGNAL s_acertou      : STD_LOGIC;
 
   SIGNAL reset_edge : STD_LOGIC;
   SIGNAL s_sinal    : STD_LOGIC;
@@ -91,17 +93,6 @@ ARCHITECTURE estrutural OF fluxo_dados IS
     );
   END COMPONENT;
 
-  COMPONENT ram_10x2 IS
-    PORT (
-      clk          : IN STD_LOGIC;
-      endereco     : IN STD_LOGIC_VECTOR(3 DOWNTO 0);
-      dado_entrada : IN STD_LOGIC_VECTOR(1 DOWNTO 0);
-      we           : IN STD_LOGIC;
-      ce           : IN STD_LOGIC;
-      dado_saida   : OUT STD_LOGIC_VECTOR(1 DOWNTO 0)
-    );
-  END COMPONENT;
-
   COMPONENT contador_m IS
     GENERIC (
       CONSTANT M : INTEGER := 100 -- modulo do contador
@@ -111,21 +102,31 @@ ARCHITECTURE estrutural OF fluxo_dados IS
       zera_as : IN STD_LOGIC;
       zera_s  : IN STD_LOGIC;
       conta   : IN STD_LOGIC;
-      reduz   : IN STD_LOGIC;
       Q       : OUT STD_LOGIC_VECTOR(NATURAL(ceil(log2(real(M)))) - 1 DOWNTO 0);
       fim     : OUT STD_LOGIC;
-      inicio  : OUT STD_LOGIC;
-      meio    : OUT STD_LOGIC
+      meio    : OUT STD_LOGIC;
+      posmeio : OUT STD_LOGIC
+    );
+  END COMPONENT;
+
+  COMPONENT freq_divider IS
+    GENERIC (
+      CONSTANT R : INTEGER := 1000
+    );
+    PORT (
+      reset     : IN STD_LOGIC;
+      clock_in  : IN STD_LOGIC;
+      clock_out : OUT STD_LOGIC
     );
   END COMPONENT;
 
 BEGIN
 
-  s_sinal <= botoes(0) OR botoes(1) OR botoes(2) OR botoes(3);
+  s_sinal <= (NOT botoes(0)) OR (NOT botoes(1)) OR (NOT botoes(2)) OR (NOT botoes(3));
+
+  s_neg_botoes <= NOT botoes;
 
   reset_edge <= NOT s_sinal;
-
-  leds <= s_dado;
 
   -- Registra o valor do premio (expoente)
   registrador_premio : registrador_n
@@ -134,7 +135,7 @@ BEGIN
     clock  => clock,
     clear  => limpaPR,
     enable => registraPR,
-    D      => s_rodada,
+    D      => s_pergunta,
     Q      => s_premio_ganho
   );
 
@@ -143,7 +144,7 @@ BEGIN
   -- Codifica respostas para 2 bits
   encoder : codificador_4x2
   PORT MAP(
-    botoes => botoes,
+    botoes => s_neg_botoes,
     valor  => s_codificado
   );
 
@@ -152,7 +153,7 @@ BEGIN
     clock => clock,
     reset => reset_edge,
     sinal => s_sinal,
-    pulso => jogada_pulso
+    pulso => resposta_pulso
   );
 
   registrador : registrador_n
@@ -174,24 +175,33 @@ BEGIN
     zera_as => '0',
     zera_s  => zeraCR, -- clr ativo em alto
     conta   => contaCR,
-    reduz   => reduzCR,
-    Q       => s_rodada,
+    Q       => s_pergunta,
     meio    => OPEN,
-    inicio  => inicioL,
-    fim     => fimL
+    fim     => fimL,
+    posmeio => posmeioL
   );
   comparador : comparador_85
   PORT MAP(
-    i_A1   => s_dado(1),
+    i_A1   => gabarito(1),
     i_B1   => s_resposta(1),
-    i_A0   => s_dado(0),
+    i_A0   => gabarito(0),
     i_B0   => s_resposta(0),
     i_AGTB => '0',
     i_ALTB => '0',
     i_AEQB => '1',
     o_AGTB => OPEN, -- saidas nao usadas
     o_ALTB => OPEN,
-    o_AEQB => jogada_correta
+    o_AEQB => s_acertou
+  );
+
+  acertou <= compara AND s_acertou;
+  -- conta segundos de espera
+  espera : freq_divider
+  GENERIC MAP(R => 1000)
+  PORT MAP(
+    reset     => zeraEP,
+    clock_in  => clock,
+    clock_out => conta_espera
   );
 
   -- timeout entre perguntas
@@ -202,10 +212,8 @@ BEGIN
     zera_as => '0',
     zera_s  => zeraT,
     conta   => contaT,
-    reduz   => '0',
     Q       => OPEN,
     meio    => meioT,
-    inicio  => OPEN,
     fim     => fimT
   );
 
@@ -217,26 +225,12 @@ BEGIN
     zera_as => '0',
     zera_s  => zeraJ0,
     conta   => contaJ0,
-    reduz   => '0',
     Q       => OPEN,
     meio    => OPEN,
-    inicio  => OPEN,
     fim     => fimJ0
   );
-  s_endereco <= s_rodada;
-  ---- memoria: entity work.ram_10x2 (ram_mif)  -- usar esta linha para Intel Quartus
-  memoria : ENTITY work.ram_10x2 (ram_modelsim) -- usar arquitetura para ModelSim
-    PORT MAP(
-      clk          => clock,
-      endereco     => s_endereco,
-      dado_entrada => s_resposta,
-      we           => '1', -- we ativo em baixo
-      ce           => '0',
-      dado_saida   => s_dado
-    );
 
-  db_rodada  <= s_rodada;
-  db_memoria <= s_dado;
-  jogada     <= s_resposta;
+  db_pergunta <= s_pergunta;
+  resposta    <= s_resposta;
 
 END ARCHITECTURE estrutural;

@@ -3,7 +3,11 @@ USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;
 
 ENTITY freq_divider IS
+    GENERIC (
+        CONSTANT R : INTEGER := 1000
+    );
     PORT (
+        reset     : IN STD_LOGIC;
         clock_in  : IN STD_LOGIC;
         clock_out : OUT STD_LOGIC
     );
@@ -22,13 +26,19 @@ BEGIN
 
         IF (rising_edge(clock_in)) THEN
 
-            count <= count + 1;
+            IF reset = '0' THEN
 
-            IF (count = 25000) THEN
+                count <= count + 1;
 
-                clock_state <= NOT clock_state;
+                IF (count = R) THEN
+
+                    clock_state <= NOT clock_state;
+                    count       <= 1;
+
+                END IF;
+            ELSIF reset = '1' THEN
                 count       <= 1;
-
+                clock_state <= '0';
             END IF;
         END IF;
 
